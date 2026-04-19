@@ -12,7 +12,7 @@ Applies to Gherkin `.feature` files and Kotlin step-definition files.
 - No control flow in `.feature` files. If behavior depends on data, use `Scenario Outline` with `Examples`.
 - `Background:` holds truly shared preconditions. Do not use it to smuggle setup that only one scenario needs.
 - Scenario names are complete English sentences describing the behavior.
-- Tags are lowercase with optional `:value` suffix (`@smoke`, `@severity:critical`, `@TMS-1234`).
+- Tags are lowercase with optional `:value` suffix (`@smoke`, `@severity:critical`); external ticket tags may keep their upstream casing (`@TMS-1234`).
 
 ## Step definitions
 
