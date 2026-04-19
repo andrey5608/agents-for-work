@@ -14,16 +14,18 @@ This repository is a **template** of GitHub Copilot assets (instructions, prompt
   - `/migrate-auto` — autonomous migration: policy-driven Draft approval + bounded retry-with-fix
   - `/add-lesson-learned` — manually append an entry to a knowledge catalog
   - `/commit` — generate a concise English commit message from the staged diff and run `git commit` after explicit approval
+  - `/create-api-autotest` — author a new Kotlin + JUnit 5 API test class for a specified endpoint set, mirroring the target module's existing architecture
 - **Chat modes (agents)** — `.github/chatmodes/*.chatmode.md`:
   - `migrate-conductor` — orchestrates an interactive migration, owns the journal
   - `migrate-conductor-auto` — autonomous variant with auto-approval + retry loop; falls back to `migrate-conductor` on any failing criterion
   - `migrate-worker` — produces Kotlin test code
-  - `migrate-verifier` — build / test / Allure / editorconfig gate
+  - `results-verifier` — build / test / Allure / editorconfig gate; reused by the authoring flow with `source: authored`
+  - `api-test-author` — authors new Kotlin + JUnit 5 API tests for a specified endpoint set; extracts and mirrors the target module's existing architectural scheme
 - **Knowledge base** — `.github/copilot/knowledge/`:
   - `lessons-learned/{migration,cucumber-debug,review}.md` (append-only)
   - `migration-patterns.md`, `migration-pitfalls.md`
 - **Migration journal** — `.github/copilot/journal/`
-- **Templates** — `.github/copilot/templates/` (draft, outline port plan, Allure mapping, header, review checklist, auto-approval checklist)
+- **Templates** — `.github/copilot/templates/` (draft, outline port plan, Allure mapping, header, review checklist, auto-approval checklist, API test draft)
 - **Example project** — `migration-examples/sample-cucumber/` (used for smoke testing the whole toolchain)
 
 ## Install into a target repo
@@ -42,7 +44,8 @@ This repository is a **template** of GitHub Copilot assets (instructions, prompt
 - `/migrate-auto <path-to-feature> --scenario="<name>" [--retry-budget=N]` — autonomous run. The Draft is auto-approved when every criterion in `auto-approval-checklist.template.md` passes; any failing criterion falls back to `/migrate`. A Scenario Outline port plan still requires live approval. Verifier blockers are retried up to `--retry-budget` times (default `3`, max `5`) with scoped fixes; non-auto-fixable classes escalate immediately.
 - `/add-lesson-learned [catalog]` — record a past solution or recurring issue manually, outside the end-of-run prompts.
 - `/commit` — generate a concise English subject line (and body only when the subject cannot carry the intent alone) from the staged diff, preview it, and run `git commit` on `y`. Add `--include-unstaged` to run `git add -u` first (never stages untracked files). Add `--message="..."` to skip generation and use the provided subject verbatim. Refuses to pass `--no-verify` or to `--amend`.
-- Switch to `migrate-conductor` or `migrate-conductor-auto` chat mode when you want the full orchestrated flow; either conductor delegates to `migrate-worker` and `migrate-verifier`.
+- `/create-api-autotest --module=<path> --endpoints="METHOD /path, ..."` — author new API tests. The agent locates existing tests under the module, extracts the module's architectural scheme (HTTP client, base class, fixtures, auth wiring, Allure convention, parameterization style), fills `api-test-draft.template.md`, asks for approval (unless `--approved-concept=...`), writes one test class with one `@Test` per (endpoint × scenario), and runs the verifier with `source: authored` (Gate 3 legacy-parity is `skipped`; Gate 6 does not reject `@ParameterizedTest`). Refuses if the module has no tests **and** no sibling module to mirror.
+- Switch to `migrate-conductor` or `migrate-conductor-auto` chat mode when you want the full orchestrated flow; either conductor delegates to `migrate-worker` and `results-verifier`.
 
 ## Autonomous migration — hands-free run
 

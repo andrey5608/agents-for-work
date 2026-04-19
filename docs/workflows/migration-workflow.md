@@ -22,7 +22,7 @@ migrate-worker                                                      │
  │  Plain @Test, Allure annotations explicit, editorconfig honored  │
  └──────────────────────────────────────────────────────────────────┘
  ▼
-migrate-verifier
+results-verifier
  │  Gate 1  mvn -q verify
  │  Gate 2  mvn test -Dtest=<NewClass>#<method>  + parse surefire XML
  │  Gate 3  legacy Cucumber run for the same scenario + parse surefire XML
@@ -124,7 +124,7 @@ migrate-conductor-auto
  │                                     any ✗: fall back to /migrate interactive
  │                                     #7 ✗: refuse until committed/stashed
  │  Step 4  delegate ────────────────► migrate-worker (as in /migrate)
- │  Step 5  delegate ────────────────► migrate-verifier (as in /migrate)
+ │  Step 5  delegate ────────────────► results-verifier (as in /migrate)
  │  Step 5a Verifier blockers? classify ──► all auto-fixable?
  │            yes: scoped fix, re-verify, increment attempt, repeat until green or budget exhausted
  │            no:  escalate
@@ -146,7 +146,7 @@ Assign a GitHub issue titled `Migrate scenario "<name>" from <feature-path>` to 
 - Interactive conductor: `.github/chatmodes/migrate-conductor.chatmode.md`
 - Autonomous conductor: `.github/chatmodes/migrate-conductor-auto.chatmode.md`
 - Worker: `.github/chatmodes/migrate-worker.chatmode.md`
-- Verifier: `.github/chatmodes/migrate-verifier.chatmode.md`
+- Verifier: `.github/chatmodes/results-verifier.chatmode.md`
 - Templates: `.github/copilot/templates/*.template.md` (including `auto-approval-checklist.template.md`)
 - Journal: `.github/copilot/journal/{_INDEX,_TEMPLATE}.md`
 - Knowledge: `.github/copilot/knowledge/**`

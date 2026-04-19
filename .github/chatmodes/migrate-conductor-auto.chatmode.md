@@ -131,6 +131,6 @@ For hands-free runs, assign a GitHub issue titled `Migrate scenario "<name>" fro
 
 - `.github/chatmodes/migrate-conductor.chatmode.md` — interactive parent; same worker + verifier.
 - `.github/chatmodes/migrate-worker.chatmode.md` — unchanged, used via scoped fix in retries.
-- `.github/chatmodes/migrate-verifier.chatmode.md` — unchanged.
+- `.github/chatmodes/results-verifier.chatmode.md` — unchanged.
 - `.github/copilot/templates/auto-approval-checklist.template.md` — criterion record + retry log.
 - `.github/prompts/migrate-auto.prompt.md` — the slash command.

@@ -30,13 +30,15 @@ This repository hosts autotests for a **backend-only** service. Test stack:
 - `/migrate-auto <feature> [--scenario="..."] [--retry-budget=N] [--approved-concept=...]` — autonomous variant with policy-driven Draft approval and bounded retry-with-fix. Falls back to `/migrate` on any failing criterion; always blocks on Scenario Outline port plan.
 - `/add-lesson-learned [catalog]` — manually append an entry to one of the knowledge catalogs (migration / cucumber-debug / review / pattern / pitfall).
 - `/commit` — generate a concise English commit message from the staged diff and run `git commit` after explicit approval.
+- `/create-api-autotest --module=<path> --endpoints="..."` — author a new Kotlin + JUnit 5 API test class for the given endpoint set, mirroring the module's existing architectural scheme (client, base class, fixtures, Allure, parameterization).
 
 ## Available custom chat modes (agents)
 
 - `migrate-conductor` — orchestrates an interactive migration, owns the journal.
 - `migrate-conductor-auto` — autonomous variant with auto-approval policy + retry-with-fix loop; delegates to the same worker and verifier.
 - `migrate-worker` — produces the Kotlin test code.
-- `migrate-verifier` — build / test / Allure / editorconfig gate.
+- `results-verifier` — build / test / Allure / editorconfig gate. Used by both the migration conductors (`source: migration`) and the authoring agent (`source: authored`).
+- `api-test-author` — authors new Kotlin + JUnit 5 API tests for a specified endpoint set, mirroring the target module's existing architectural scheme.
 
 ## Knowledge base layout
 

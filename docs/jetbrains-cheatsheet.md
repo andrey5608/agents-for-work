@@ -87,6 +87,28 @@ Then collect fields one at a time, using the entry format for that catalog as de
 Show me the exact Markdown that will be appended. Ask "Append this to <path>? (y / n)". On "y" append to the end of the file under the trailing "<!-- Entries go below ... -->" marker, preserving the file's other sections. On "n" stop without writing. One entry per run.
 ```
 
+## /create-api-autotest
+
+```
+Act as the API-test authoring agent. Inputs: --module=<path> (directory with src/test/kotlin/** under it, a Maven submodule, or a Kotlin package path) and either --endpoints="METHOD /path, METHOD /path, ..." or --spec=<path>. Optional --approved-concept="..." short-circuits the Draft gate.
+
+Step 1 — Locate existing tests under <module>/src/test/kotlin/**. Sample a representative set (smallest 2 + newest 3). If the module has zero API tests, ask for a sibling module to mirror; refuse if none is given.
+
+Step 2 — Extract the architectural scheme from the samples: HTTP client (REST-assured / WebTestClient / OkHttp / Ktor / custom), base class or @ExtendWith / @SpringBootTest, fixture loading pattern (builders / resources fixtures / factory methods), auth wiring, assertion style (AssertJ / REST-assured body / JSON-Path / custom), parameterization style (plain @Test + helpers vs. @ParameterizedTest — choose whichever dominates; default to plain when mixed), Allure convention (Epic/Feature/Story values, default Severity, @Tag vocabulary), package/file naming, error-response shape, and external deps. Cite file:line evidence for every claim.
+
+Step 3 — Resolve each endpoint: HTTP method, path, parameters, request body type (from the module's serializer types or resource fixtures), success response shape, declared error responses, auth requirement. Ambiguities block — never guess method, path, or error class.
+
+Step 4 — Fill .github/copilot/templates/api-test-draft.template.md. Include the extracted scheme, per-endpoint happy + negative scenarios (using only error classes the module already tests), Allure annotation plan, parameterization choice with evidence, open questions.
+
+Step 5 — Unless --approved-concept was provided, ask once: "Approve this Draft? (y / n / revise)". No code is written before approval.
+
+Step 6 — Write one Kotlin test class under src/test/kotlin/... following the module's package convention. Header comment: "// authored by api-test-author — journal: .github/copilot/journal/<YYYY-MM-DD>-<slug>.md". Allure annotations explicit on class and methods. English method names. Honor .editorconfig. Reuse the module's base classes, clients, fixtures — do not introduce parallel scaffolding. Refuse to touch production code; stop and surface the gap instead.
+
+Step 7 — Invoke the verifier with source: authored, new_test_class and new_test_method(s) set, legacy fields N/A. Gates 1, 2, 4, 5, 6 run; Gate 3 is skipped; Gate 6 does not reject @ParameterizedTest.
+
+Step 8 — On green: journal entry with Mode: authored (reuse .github/copilot/journal/_TEMPLATE.md, rename the "Scenario → method" section body to "Endpoint → method"), update _INDEX.md, then ask three independent y/n questions for lessons/patterns/pitfalls. Write only on "y". On block: surface blockers[] and offer revise / abort.
+```
+
 ## /commit
 
 ```

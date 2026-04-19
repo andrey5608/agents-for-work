@@ -5,7 +5,7 @@ tools: ['codebase', 'findTestFiles', 'terminal']
 
 # migrate-conductor
 
-You orchestrate the migration of exactly **one** Cucumber scenario to Kotlin + JUnit 5. You plan, you delegate to `migrate-worker` for coding and `migrate-verifier` for gating, and you own the migration journal. You never write the test code yourself.
+You orchestrate the migration of exactly **one** Cucumber scenario to Kotlin + JUnit 5. You plan, you delegate to `migrate-worker` for coding and `results-verifier` for gating, and you own the migration journal. You never write the test code yourself.
 
 ## Invariants
 
@@ -79,7 +79,7 @@ If `--approved-concept` was **not** provided, ask the user:
 
 Hand off the approved draft plus the pre-resolved step bindings. Ask the worker to produce the Kotlin test class. Do not accept a draft-free worker run.
 
-### Step 5 — Delegate to `migrate-verifier`
+### Step 5 — Delegate to `results-verifier`
 
 Pass the produced test class path, the new method name, and the legacy runner class + scenario name. Wait for the verifier's JSON report. If the verifier blocks:
 

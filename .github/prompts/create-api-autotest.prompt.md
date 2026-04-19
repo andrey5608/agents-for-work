@@ -1,0 +1,68 @@
+---
+mode: 'agent'
+description: 'Author new Kotlin + JUnit 5 API autotests for a specified endpoint set, reusing the architectural scheme already present in the target module.'
+tools: ['codebase', 'edit', 'terminal', 'findTestFiles']
+---
+
+# /create-api-autotest
+
+Author one new test class under the target module covering a specified list of API endpoints. The agent mirrors the module's existing architectural scheme (HTTP client, base class, fixtures, auth wiring, Allure convention, parameterization style) — it does not invent a new style.
+
+## Usage
+
+```
+/create-api-autotest --module=<path> --endpoints="METHOD /path, METHOD /path, ..."
+/create-api-autotest --module=<path> --spec=<path>
+/create-api-autotest --module=<path> --endpoints="..." --approved-concept="<inline note or path>"
+```
+
+## Arguments
+
+- `--module=<path>` — required. Any of:
+  - directory with `src/test/kotlin/**` under it,
+  - Maven submodule path (`modules/<name>`),
+  - Kotlin package path under `src/test/kotlin/`.
+- `--endpoints="..."` — comma-separated list, each element `METHOD /path`. Example: `GET /users/{id}, POST /users, DELETE /users/{id}`.
+- `--spec=<path>` — alternative to `--endpoints`. Path to an OpenAPI / JSON / YAML / plain-text file. The agent extracts the endpoint list from it.
+- `--approved-concept="..."` — optional. Short-circuits the Draft-approval gate; the value is recorded in the journal.
+
+Exactly one of `--endpoints` or `--spec` must be present.
+
+## Behavior
+
+1. Enter `api-test-author` chat mode (see `.github/chatmodes/api-test-author.chatmode.md`).
+2. The agent locates existing tests in `<module>/src/test/kotlin/**` and extracts the module's architectural scheme. If the module has no tests, it asks for a sibling module to mirror and refuses otherwise.
+3. The agent resolves the endpoint list — HTTP method, path, parameters, request/response shapes, auth requirement. Ambiguities block with a targeted question. Nothing is guessed.
+4. The agent fills `.github/copilot/templates/api-test-draft.template.md` and, unless `--approved-concept` was passed, asks for approval.
+5. The agent writes one Kotlin test class under `src/test/kotlin/...`, following the module's conventions (client, base class, fixtures, Allure, parameterization style).
+6. The agent hands off to `results-verifier` with `source: authored`. Gate 3 (legacy parity) is `skipped`; Gate 6 does **not** reject `@ParameterizedTest` when authored.
+7. On green: the agent writes a journal entry with `Mode: authored`, updates `_INDEX.md`, and asks the three independent lesson-harvest questions.
+8. On block: the agent surfaces the verifier's `blockers[]` and offers to revise or abort.
+
+## Invariants restated
+
+- English output only.
+- Backend only — no UI patterns.
+- One test class per run; multiple endpoints are fine as long as they belong to the same module and belong together.
+- Plain `@Test` **or** `@ParameterizedTest` — whichever the module's existing tests use. Mixed evidence resolves to plain `@Test` + private helpers.
+- All Allure metadata explicit on class and methods.
+- `.editorconfig` honored on every write.
+- No production-code changes. If the test cannot be written without touching prod, the agent stops and surfaces the gap.
+- Draft → approval → Final unless `--approved-concept` was passed.
+- Lessons-learned writes require explicit `y`.
+
+## Refusals
+
+- Module has no existing tests **and** no sibling module was provided — refuse.
+- Endpoint entry missing method or path — refuse that entry; ask for it.
+- Request to introduce a UI pattern — refuse.
+- Request to bypass Allure or editorconfig gates — refuse.
+- Request to drop the module's base class or fixtures to "simplify" — refuse; mirroring the existing scheme is the whole point.
+- Request to modify production code from this command — refuse; direct the user to stage the prod change separately.
+
+## Related files
+
+- `.github/chatmodes/api-test-author.chatmode.md`
+- `.github/chatmodes/results-verifier.chatmode.md` (reused with `source: authored`)
+- `.github/copilot/templates/api-test-draft.template.md`
+- `.github/copilot/journal/_TEMPLATE.md`

@@ -28,7 +28,7 @@ Migrate exactly one Cucumber scenario to Kotlin + JUnit 5.
 2. The conductor detects Scenario Outline / Examples and, if present, fills `scenario-outline-port-plan.template.md` and blocks for user approval before anything else.
 3. The conductor produces a Draft using `migration-draft.template.md` and, unless `--approved-concept` was provided, asks the user to approve it.
 4. The conductor hands off to `migrate-worker` to write the Kotlin test class.
-5. The conductor hands off to `migrate-verifier` to run build + new test + legacy test + Allure metadata + `.editorconfig` gates.
+5. The conductor hands off to `results-verifier` to run build + new test + legacy test + Allure metadata + `.editorconfig` gates.
 6. On green: the conductor writes the migration journal, updates `_INDEX.md`, and asks (one question at a time) whether to append lessons.
 7. On block: the conductor surfaces the verifier's blocker list and offers to revise or abort.
 
@@ -47,7 +47,7 @@ Migrate exactly one Cucumber scenario to Kotlin + JUnit 5.
 
 - `.github/chatmodes/migrate-conductor.chatmode.md`
 - `.github/chatmodes/migrate-worker.chatmode.md`
-- `.github/chatmodes/migrate-verifier.chatmode.md`
+- `.github/chatmodes/results-verifier.chatmode.md`
 - `.github/copilot/templates/migration-draft.template.md`
 - `.github/copilot/templates/scenario-outline-port-plan.template.md`
 - `.github/copilot/templates/allure-mapping.template.md`

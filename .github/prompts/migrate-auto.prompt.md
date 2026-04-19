@@ -35,7 +35,7 @@ The **Scenario Outline port plan** still requires live human approval. Autonomou
 2. If the target is a `Scenario Outline`, the conductor fills `scenario-outline-port-plan.template.md` and **blocks for human approval** before anything else.
 3. The conductor evaluates the 8 auto-approval criteria and writes the result into `auto-approval-checklist.template.md`. All ✓ → the Draft is auto-approved. Any ✗ → fall back to interactive `/migrate`.
 4. The conductor hands off to `migrate-worker`.
-5. The conductor hands off to `migrate-verifier`.
+5. The conductor hands off to `results-verifier`.
 6. On `blockers[]`: classify each blocker. If all are auto-fixable, apply a scoped fix (worker touches only flagged files) and re-verify. Repeat until green or budget exhausted.
 7. On green: write the migration journal with `Mode: autonomous`, full criterion checklist, and retry log. Update `_INDEX.md`. Novel failure classes observed during retries produce a single `Review: pending` lesson stub.
 8. On escalation (non-auto-fixable blocker, or budget exhausted): write the journal as `Mode: autonomous → escalated`, leave the test file in its last emitted state, surface the final blocker list + retry log + one-sentence diagnosis, and offer `retry interactively / open in worker / abort and revert`.
@@ -69,7 +69,7 @@ For hands-free runs, create a GitHub issue titled `Migrate scenario "<name>" fro
 - `.github/chatmodes/migrate-conductor-auto.chatmode.md`
 - `.github/chatmodes/migrate-conductor.chatmode.md` (interactive fallback)
 - `.github/chatmodes/migrate-worker.chatmode.md`
-- `.github/chatmodes/migrate-verifier.chatmode.md`
+- `.github/chatmodes/results-verifier.chatmode.md`
 - `.github/copilot/templates/auto-approval-checklist.template.md`
 - `.github/copilot/templates/migration-draft.template.md`
 - `.github/copilot/templates/scenario-outline-port-plan.template.md`
