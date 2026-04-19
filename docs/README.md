@@ -10,17 +10,20 @@ This repository is a **template** of GitHub Copilot assets (instructions, prompt
   - `/review` — one-command review against 10 rubrics
   - `/explain-test` — structured test explanation
   - `/debug-cucumber` — Cucumber failure diagnosis with step-to-method trace
-  - `/migrate` — Cucumber → Kotlin + JUnit 5 migration
+  - `/migrate` — Cucumber → Kotlin + JUnit 5 migration (interactive)
+  - `/migrate-auto` — autonomous migration: policy-driven Draft approval + bounded retry-with-fix
   - `/add-lesson-learned` — manually append an entry to a knowledge catalog
+  - `/commit` — generate a concise English commit message from the staged diff and run `git commit` after explicit approval
 - **Chat modes (agents)** — `.github/chatmodes/*.chatmode.md`:
-  - `migrate-conductor` — orchestrates a migration, owns the journal
+  - `migrate-conductor` — orchestrates an interactive migration, owns the journal
+  - `migrate-conductor-auto` — autonomous variant with auto-approval + retry loop; falls back to `migrate-conductor` on any failing criterion
   - `migrate-worker` — produces Kotlin test code
   - `migrate-verifier` — build / test / Allure / editorconfig gate
 - **Knowledge base** — `.github/copilot/knowledge/`:
   - `lessons-learned/{migration,cucumber-debug,review}.md` (append-only)
   - `migration-patterns.md`, `migration-pitfalls.md`
 - **Migration journal** — `.github/copilot/journal/`
-- **Templates** — `.github/copilot/templates/` (draft, outline port plan, Allure mapping, header, review checklist)
+- **Templates** — `.github/copilot/templates/` (draft, outline port plan, Allure mapping, header, review checklist, auto-approval checklist)
 - **Example project** — `migration-examples/sample-cucumber/` (used for smoke testing the whole toolchain)
 
 ## Install into a target repo
@@ -35,9 +38,21 @@ This repository is a **template** of GitHub Copilot assets (instructions, prompt
 - `/review` — run inside Copilot Chat with the diff loaded.
 - `/explain-test <path>` — path to a `.kt` test or a `.feature` scenario.
 - `/debug-cucumber <path-to-feature>` — optionally attach a stack trace snippet.
-- `/migrate <path-to-feature> --scenario="<name>"` — migrate one scenario. Add `--approved-concept=...` to skip the draft approval step.
+- `/migrate <path-to-feature> --scenario="<name>"` — migrate one scenario. Add `--approved-concept=...` to skip the Draft approval step.
+- `/migrate-auto <path-to-feature> --scenario="<name>" [--retry-budget=N]` — autonomous run. The Draft is auto-approved when every criterion in `auto-approval-checklist.template.md` passes; any failing criterion falls back to `/migrate`. A Scenario Outline port plan still requires live approval. Verifier blockers are retried up to `--retry-budget` times (default `3`, max `5`) with scoped fixes; non-auto-fixable classes escalate immediately.
 - `/add-lesson-learned [catalog]` — record a past solution or recurring issue manually, outside the end-of-run prompts.
-- Switch to `migrate-conductor` chat mode when you want the full orchestrated flow; the conductor delegates to `migrate-worker` and `migrate-verifier`.
+- `/commit` — generate a concise English subject line (and body only when the subject cannot carry the intent alone) from the staged diff, preview it, and run `git commit` on `y`. Add `--include-unstaged` to run `git add -u` first (never stages untracked files). Add `--message="..."` to skip generation and use the provided subject verbatim. Refuses to pass `--no-verify` or to `--amend`.
+- Switch to `migrate-conductor` or `migrate-conductor-auto` chat mode when you want the full orchestrated flow; either conductor delegates to `migrate-worker` and `migrate-verifier`.
+
+## Autonomous migration — hands-free run
+
+`/migrate-auto` is designed to run without live approval on the Draft gate, but preserves every safety net that the interactive flow has:
+
+- The Scenario Outline port plan still requires a human — autonomous mode will not auto-approve it.
+- Verifier gates (build, new test, legacy parity, Allure metadata, `.editorconfig`, anti-patterns) are unchanged. The retry loop only re-emits the failing file through `migrate-worker`; it never disables a gate, weakens an assertion, or strips Allure annotations.
+- Lessons-learned writes still require live `y`, with **one exception**: a novel failure class observed during retries produces a single `Review: pending` stub in `lessons-learned/migration.md`. The curator promotes or discards it at the next rotation.
+
+For CI-isolated runs, assign a GitHub issue titled `Migrate scenario "<name>" from <feature-path>` to **GitHub Copilot** (the coding agent). Put the exact `/migrate-auto …` command in the body. Copilot opens a draft PR and runs the autonomous conductor there; escalations surface as PR comments with the retry log attached.
 
 ## Use from IntelliJ IDEA Copilot Chat
 

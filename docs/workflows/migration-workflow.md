@@ -75,12 +75,78 @@ At the end of a green run, the conductor asks three independent questions:
 
 Each `y` appends an entry in the format defined in `docs/self-learning.md`.
 
+## Autonomous path — `/migrate-auto`
+
+`/migrate-auto` inherits every step above, with two surgical differences:
+
+1. **Step 3 (Draft approval)** runs through an auto-approval policy instead of asking the user. Every criterion must pass:
+
+   | # | Criterion | Fallback |
+   |---|-----------|----------|
+   | 1 | Plain `Scenario:`, or approved Outline port plan | Interactive |
+   | 2 | Every step binds to exactly one method | Interactive |
+   | 3 | Allure mapping fully derivable from source; no `<...>` placeholders | Interactive |
+   | 4 | No `migration-pitfalls.md` entry tagged `Severity: human-review` matches | Interactive |
+   | 5 | No `auto-escalation-triggers` in `migration-knowledge.instructions.md` matches | Interactive |
+   | 6 | Target test class path does not collide | Interactive |
+   | 7 | `git status --porcelain src/test` reports clean | Refuse |
+   | 8 | `--approved-concept=...` set OR Draft has zero placeholders and zero open questions | Interactive |
+
+   The result is recorded in `.github/copilot/templates/auto-approval-checklist.template.md` and attached to the journal. **Step 0 (Outline port plan) still blocks for human approval even in autonomous mode.**
+
+2. **Verifier blockers[]** go through a bounded retry-with-fix loop (default budget: `3`, max `5`, via `--retry-budget=N`). Each blocker is classified:
+
+   ```
+   compile-error | missing-import | allure-missing | editorconfig | anti-pattern   → auto-fixable
+   test-assertion  → conditionally auto-fixable; never change an assertion to match an unexpected behavior
+   legacy-red | infra-error | unknown                                              → escalate
+   ```
+
+   An auto-fixable round re-invokes `migrate-worker` with scope limited to the flagged file(s). The worker is forbidden from:
+   - modifying the `.feature` or the legacy runner,
+   - weakening or broadening an assertion to fake a green,
+   - disabling a verifier gate,
+   - stripping Allure annotations to dodge the metadata check.
+
+   Violations surface as anti-patterns on the next verify and trigger immediate escalation even within budget.
+
+### Autonomous sequence
+
+```
+user
+ │  /migrate-auto <feature> [--scenario=...] [--retry-budget=N] [--approved-concept=...]
+ ▼
+migrate-conductor-auto
+ │  Step 0  Scenario Outline? ──► scenario-outline-port-plan.template.md ──► AWAIT USER APPROVAL (never auto)
+ │  Step 1  Load instructions, knowledge, lessons; resolve step bindings
+ │  Step 2  Draft (migration-draft.template.md, Allure mapping filled)
+ │  Step 3  Auto-approval checklist ──► all ✓? yes: log "auto-approved"
+ │                                     any ✗: fall back to /migrate interactive
+ │                                     #7 ✗: refuse until committed/stashed
+ │  Step 4  delegate ────────────────► migrate-worker (as in /migrate)
+ │  Step 5  delegate ────────────────► migrate-verifier (as in /migrate)
+ │  Step 5a Verifier blockers? classify ──► all auto-fixable?
+ │            yes: scoped fix, re-verify, increment attempt, repeat until green or budget exhausted
+ │            no:  escalate
+ │  Step 6  Journal with Mode: autonomous, full criterion log, retry log; update _INDEX.md
+ │          Novel failure class observed? append one Review: pending stub to lessons-learned/migration.md
+ │  Step 7  Escalation (if reached): journal Mode: autonomous → escalated;
+ │          preserve last emitted file; surface blockers + retry log + diagnosis;
+ │          offer retry interactively / open in worker / abort and revert.
+```
+
+### Deploy path — GitHub Copilot coding agent
+
+Assign a GitHub issue titled `Migrate scenario "<name>" from <feature-path>` to GitHub Copilot. Put the exact command in the body. Copilot opens a draft PR and runs the autonomous conductor in CI-like isolation. Escalations land as PR comments with the retry log attached.
+
 ## Related files
 
-- Prompt: `.github/prompts/migrate.prompt.md`
-- Conductor: `.github/chatmodes/migrate-conductor.chatmode.md`
+- Interactive prompt: `.github/prompts/migrate.prompt.md`
+- Autonomous prompt: `.github/prompts/migrate-auto.prompt.md`
+- Interactive conductor: `.github/chatmodes/migrate-conductor.chatmode.md`
+- Autonomous conductor: `.github/chatmodes/migrate-conductor-auto.chatmode.md`
 - Worker: `.github/chatmodes/migrate-worker.chatmode.md`
 - Verifier: `.github/chatmodes/migrate-verifier.chatmode.md`
-- Templates: `.github/copilot/templates/*.template.md`
+- Templates: `.github/copilot/templates/*.template.md` (including `auto-approval-checklist.template.md`)
 - Journal: `.github/copilot/journal/{_INDEX,_TEMPLATE}.md`
 - Knowledge: `.github/copilot/knowledge/**`

@@ -19,12 +19,13 @@ Two migration-specific catalogs (also append-only):
 | `.github/copilot/knowledge/migration-patterns.md` | Canonical Cucumber → Kotlin + JUnit 5 mappings that have been validated in this repo. |
 | `.github/copilot/knowledge/migration-pitfalls.md` | Known traps surfaced at the Draft step so the worker is warned upfront. |
 
-## Two ways to write an entry
+## Three ways to write an entry
 
 1. **Agent-proposed, user-confirmed** — the end-of-run prompt inside `/review`, `/debug-cucumber`, or `/migrate` asks once whether to append. This is the default path.
 2. **User-initiated manual entry** — run `/add-lesson-learned [catalog]` at any time to record past solutions or recurring issues outside of a run. The agent collects the fields, previews the entry, and appends only after an explicit `y`. See `.github/prompts/add-lesson-learned.prompt.md`.
+3. **Autonomous-mode stub (narrow)** — `/migrate-auto` may append a single entry to `lessons-learned/migration.md` without live `y` **only** when the retry loop exposed a novel failure class that matches no existing entry. The stub is marked `Applies to: migration (autonomous)` and `Review: pending`; the curator promotes or discards it at the next rotation. This is the only write path that does not require an explicit user confirmation.
 
-Both paths use the same entry formats and the same anti-pattern refusals.
+All three paths use the same entry formats and the same anti-pattern refusals.
 
 ## Write flow (agent-proposed, user-confirmed)
 
@@ -77,6 +78,6 @@ Files grow. A curator pass keeps them useful.
 ## What self-learning does NOT do
 
 - It does not modify the target project's test code without going through the normal Draft → approval → Final migration flow.
-- It does not write entries without explicit user `y`.
+- It does not write entries without explicit user `y`, with the single narrow exception described above for autonomous-mode `Review: pending` stubs.
 - It does not remove or rewrite prior entries implicitly — only the curator rotation does that, intentionally and in a commit.
 - It does not cross-contaminate catalogs: a migration lesson does not get written into `lessons-learned/review.md` even if it would be useful there. If a lesson is dual-purpose, the agent asks twice.
