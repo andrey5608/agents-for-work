@@ -30,7 +30,7 @@ report
 4. Backend test architecture (any UI pattern is a blocker)
 5. Flaky risk (`Thread.sleep` is a blocker)
 6. Assertions
-7. Test data (hardcoded credentials / PII are blockers)
+7. Test data (real credentials, API tokens, PII hardcoded in source are blockers; dummy/test-only values are fine)
 8. Allure metadata
 9. `.editorconfig` compliance
 10. Security (secrets, unsafe deserialization — blockers)

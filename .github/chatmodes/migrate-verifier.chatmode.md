@@ -27,15 +27,17 @@ You are the gate. A migration is not complete until you produce a green JSON rep
 ### Gate 1 — Build
 
 ```
-./mvnw -q -DskipTests=false verify
+mvn -q -DskipTests=false verify
 ```
+
+(Use `./mvnw` instead of `mvn` if a Maven Wrapper script is present in the project root.)
 
 Expected: exit code `0`. Any compilation or plugin error blocks.
 
 ### Gate 2 — New test
 
 ```
-./mvnw test -Dtest=<new_test_class>#<new_test_method>
+mvn test -Dtest=<new_test_class>#<new_test_method>
 ```
 
 Expected: exit code `0` AND `target/surefire-reports/TEST-<class>.xml` shows `<testcase>` with no `<failure>` or `<error>` children.
@@ -45,7 +47,7 @@ Parse the XML and extract `time`, `classname`, `name`. Record them.
 ### Gate 3 — Legacy parity
 
 ```
-./mvnw test -Dtest=<legacy_runner_class> -Dcucumber.filter.name="<legacy_scenario_name>" -Dcucumber.features="<feature_path>"
+mvn test -Dtest=<legacy_runner_class> -Dcucumber.filter.name="<legacy_scenario_name>" -Dcucumber.features="<feature_path>"
 ```
 
 Expected: exit code `0` AND the scenario's testcase is green in the surefire report.

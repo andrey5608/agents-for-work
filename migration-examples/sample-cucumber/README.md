@@ -14,11 +14,11 @@ A minimal backend autotest project used to exercise the Copilot toolchain end-to
 
 ## Layout
 
-- `src/test/resources/features/login.feature` — one plain `Scenario` and one `Scenario Outline` with four `Examples` rows (happy path, wrong password, unknown user, missing username, missing password).
+- `src/test/resources/features/login.feature` — one plain `Scenario` (happy path: successful login) and one `Scenario Outline` with four `Examples` rows (wrong password, unknown user, missing username, missing password).
 - `src/test/kotlin/steps/LoginSteps.kt` — step definitions (constructor-injected).
 - `src/test/kotlin/steps/LoginContext.kt` — scoped scenario state.
 - `src/test/kotlin/steps/LoginApiClient.kt` — fake backend client annotated with Allure `@Step`.
-- `src/test/kotlin/runners/LoginRunner.kt` — JUnit 5 Suite pointing at the feature resources.
+- `src/test/kotlin/runners/LoginCucumberTest.kt` — JUnit 5 Suite pointing at the feature resources.
 
 ## How it is used by the toolchain
 
@@ -32,7 +32,7 @@ A minimal backend autotest project used to exercise the Copilot toolchain end-to
 
 ```
 cd migration-examples/sample-cucumber
-./mvnw -q test
+mvn -q test
 ```
 
 (The project is self-contained. The fake `LoginApiClient` has no external dependencies.)

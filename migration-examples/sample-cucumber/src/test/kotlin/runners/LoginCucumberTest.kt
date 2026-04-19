@@ -15,4 +15,4 @@ import io.cucumber.junit.platform.engine.Constants.PLUGIN_PROPERTY_NAME
     key = PLUGIN_PROPERTY_NAME,
     value = "pretty, io.qameta.allure.cucumber7jvm.AllureCucumber7Jvm"
 )
-class LoginRunner
+class LoginCucumberTest

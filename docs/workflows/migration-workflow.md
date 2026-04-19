@@ -23,8 +23,8 @@ migrate-worker                                                      │
  └──────────────────────────────────────────────────────────────────┘
  ▼
 migrate-verifier
- │  Gate 1  ./mvnw -q verify
- │  Gate 2  ./mvnw test -Dtest=<NewClass>#<method>  + parse surefire XML
+ │  Gate 1  mvn -q verify
+ │  Gate 2  mvn test -Dtest=<NewClass>#<method>  + parse surefire XML
  │  Gate 3  legacy Cucumber run for the same scenario + parse surefire XML
  │  Gate 4  Allure metadata present in target/allure-results/*.json
  │  Gate 5  .editorconfig compliance (editorconfig-checker or manual walk)

@@ -31,7 +31,7 @@ Diagnose a failing Cucumber scenario.
    - Non-idempotent test data (previous scenario left state; ordering dependency).
    - External stub (WireMock) not primed; Testcontainers not ready.
 6. **Emit a minimal reproduction command**:
-   - `./mvnw test -Dtest=<Runner> -Dcucumber.filter.name="<scenario>" -Dcucumber.features="<feature-path>"`
+   - `mvn test -Dtest=<Runner> -Dcucumber.filter.name="<scenario>" -Dcucumber.features="<feature-path>"`
    - If the project uses a different Cucumber plugin config, adjust accordingly; state the assumption.
 7. **Propose a fix** at the level of "what to change" — do not edit code unless explicitly asked.
 
@@ -58,7 +58,7 @@ Diagnose a failing Cucumber scenario.
 - <ordered list from most to least likely, each with a check to run>
 
 ## Minimal repro
-./mvnw test -Dtest=<Runner> -Dcucumber.filter.name="<scenario>" -Dcucumber.features="<path>"
+mvn test -Dtest=<Runner> -Dcucumber.filter.name="<scenario>" -Dcucumber.features="<path>"
 
 ## Recommended next action
 <one short paragraph>

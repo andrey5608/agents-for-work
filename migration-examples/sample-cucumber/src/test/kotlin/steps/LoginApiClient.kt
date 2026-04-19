@@ -4,7 +4,7 @@ import io.qameta.allure.Step
 
 class LoginApiClient {
 
-    @Step("POST /auth/login with username \"{username}\"")
+    @Step("POST /auth/login with username \"{0}\"")
     fun login(username: String, password: String, registered: Map<String, String>): LoginResponse {
         if (username.isBlank()) {
             return LoginResponse(status = 400, errorCode = "MISSING_USERNAME")
