@@ -48,6 +48,23 @@ Step 5 — Verifier phase: run ./mvnw -q verify; ./mvnw test -Dtest=<NewClass>#<
 Step 6 — Write the migration journal using .github/copilot/journal/_TEMPLATE.md, update .github/copilot/journal/_INDEX.md, and ask whether to append lessons to lessons-learned/migration.md / migration-patterns.md / migration-pitfalls.md. Write only on my "y".
 ```
 
+## /add-lesson-learned
+
+```
+Act as the lessons-learned recorder. I want to manually append one entry to a knowledge catalog in this repo — not triggered by the end of a /review, /debug-cucumber, or /migrate run.
+
+Ask me which catalog first (if I have not told you yet):
+- migration → .github/copilot/knowledge/lessons-learned/migration.md
+- cucumber-debug → .github/copilot/knowledge/lessons-learned/cucumber-debug.md
+- review → .github/copilot/knowledge/lessons-learned/review.md
+- pattern → .github/copilot/knowledge/migration-patterns.md
+- pitfall → .github/copilot/knowledge/migration-pitfalls.md
+
+Then collect fields one at a time, using the entry format for that catalog as defined in .github/prompts/add-lesson-learned.prompt.md. Rewrite my answers to English if needed. Refuse vague wisdom, restatements of existing instructions/* files, event logs, or non-English prose; explain why and offer to reframe.
+
+Show me the exact Markdown that will be appended. Ask "Append this to <path>? (y / n)". On "y" append to the end of the file under the trailing "<!-- Entries go below ... -->" marker, preserving the file's other sections. On "n" stop without writing. One entry per run.
+```
+
 ## Notes
 
 - These prompts are intentionally long. Save them as IntelliJ "Live Templates" or as bookmarks in your notes.

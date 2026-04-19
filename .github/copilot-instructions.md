@@ -27,6 +27,7 @@ This repository hosts autotests for a **backend-only** service. Test stack:
 - `/explain-test <path>` — structured explanation of a JUnit 5 or Cucumber test.
 - `/debug-cucumber <feature> [stack-trace]` — Cucumber failure diagnosis with step-to-method trace.
 - `/migrate <feature> [--scenario="..."] [--approved-concept=...]` — Cucumber → Kotlin + JUnit 5 migration.
+- `/add-lesson-learned [catalog]` — manually append an entry to one of the knowledge catalogs (migration / cucumber-debug / review / pattern / pitfall).
 
 ## Available custom chat modes (agents)
 

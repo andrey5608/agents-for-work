@@ -19,6 +19,13 @@ Two migration-specific catalogs (also append-only):
 | `.github/copilot/knowledge/migration-patterns.md` | Canonical Cucumber → Kotlin + JUnit 5 mappings that have been validated in this repo. |
 | `.github/copilot/knowledge/migration-pitfalls.md` | Known traps surfaced at the Draft step so the worker is warned upfront. |
 
+## Two ways to write an entry
+
+1. **Agent-proposed, user-confirmed** — the end-of-run prompt inside `/review`, `/debug-cucumber`, or `/migrate` asks once whether to append. This is the default path.
+2. **User-initiated manual entry** — run `/add-lesson-learned [catalog]` at any time to record past solutions or recurring issues outside of a run. The agent collects the fields, previews the entry, and appends only after an explicit `y`. See `.github/prompts/add-lesson-learned.prompt.md`.
+
+Both paths use the same entry formats and the same anti-pattern refusals.
+
 ## Write flow (agent-proposed, user-confirmed)
 
 1. Agent finishes a run successfully (review, debug, migration).

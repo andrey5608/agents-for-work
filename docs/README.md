@@ -11,6 +11,7 @@ This repository is a **template** of GitHub Copilot assets (instructions, prompt
   - `/explain-test` — structured test explanation
   - `/debug-cucumber` — Cucumber failure diagnosis with step-to-method trace
   - `/migrate` — Cucumber → Kotlin + JUnit 5 migration
+  - `/add-lesson-learned` — manually append an entry to a knowledge catalog
 - **Chat modes (agents)** — `.github/chatmodes/*.chatmode.md`:
   - `migrate-conductor` — orchestrates a migration, owns the journal
   - `migrate-worker` — produces Kotlin test code
@@ -35,6 +36,7 @@ This repository is a **template** of GitHub Copilot assets (instructions, prompt
 - `/explain-test <path>` — path to a `.kt` test or a `.feature` scenario.
 - `/debug-cucumber <path-to-feature>` — optionally attach a stack trace snippet.
 - `/migrate <path-to-feature> --scenario="<name>"` — migrate one scenario. Add `--approved-concept=...` to skip the draft approval step.
+- `/add-lesson-learned [catalog]` — record a past solution or recurring issue manually, outside the end-of-run prompts.
 - Switch to `migrate-conductor` chat mode when you want the full orchestrated flow; the conductor delegates to `migrate-worker` and `migrate-verifier`.
 
 ## Use from IntelliJ IDEA Copilot Chat

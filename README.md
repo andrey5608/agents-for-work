@@ -10,6 +10,7 @@ See [`docs/README.md`](docs/README.md) for the full manual, and [`docs/workflows
 - `/explain-test <path>` — structured explanation of a JUnit 5 or Cucumber test.
 - `/debug-cucumber <feature>` — Cucumber failure diagnosis with step-to-method trace.
 - `/migrate <feature> --scenario="..."` — Cucumber → Kotlin + JUnit 5 migration via conductor → worker → verifier.
+- `/add-lesson-learned [catalog]` — manually append an entry to a knowledge catalog (lessons-learned, migration-patterns, migration-pitfalls).
 
 ## Hard rules (apply to every run)
 
