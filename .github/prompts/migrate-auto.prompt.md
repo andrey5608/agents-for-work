@@ -22,8 +22,6 @@ The **Scenario Outline port plan** still requires live human approval. Autonomou
 /migrate-auto <path-to-feature> --scenario="<exact scenario name>" --approved-concept="<inline note or path>"
 ```
 
-Equivalent: `/migrate <path-to-feature> --scenario="..." --auto`.
-
 ## Arguments
 
 - `<path-to-feature>` — required.

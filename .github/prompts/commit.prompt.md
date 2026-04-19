@@ -59,7 +59,7 @@ Generate a lean English commit message from the current staged changes and run `
    )"
    ```
 
-   - Never pass `--no-verify`, `--no-gpg-sign`, or `--amend`. If a pre-commit hook fails, report the failure verbatim and stop — the user fixes the issue and reruns `/commit`.
+   - Never pass `--no-verify`, `--no-gpg-sign`, or `--amend`. These flags are unconditionally refused — see the Refusals section. If a pre-commit hook fails, report the failure verbatim and stop — the user fixes the issue and reruns `/commit`.
    - After a successful commit, run `git status --short` and print the new commit's short hash (`git rev-parse --short HEAD`).
 
 ## Refusals
@@ -67,7 +67,7 @@ Generate a lean English commit message from the current staged changes and run `
 - **Empty index.** Refuse to create an empty commit.
 - **Untracked files the user may have intended to include.** When `git status --short` shows `??` entries and `--include-unstaged` was not passed, surface them and ask whether any should be staged before proceeding. Do not auto-stage untracked files.
 - **Secrets in the diff.** If the cached diff contains literals matching an obvious secret signature (`.env` contents, AWS keys, private keys, long base64 blobs next to the word `token`/`secret`/`password`), stop and warn. Only proceed after the user explicitly confirms.
-- **`--no-verify` requested.** Refuse unless the user explicitly states why and accepts the risk in writing in the same command.
+- **`--no-verify` requested.** Refuse unconditionally. Do not proceed even if the user provides a justification.
 - **Force-push / amend / rebase requests.** Out of scope for this command. Tell the user to use git directly.
 
 ## Invariants restated

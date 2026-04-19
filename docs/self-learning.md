@@ -47,7 +47,8 @@ If an entry belongs in both `lessons-learned/*.md` and, say, `migration-patterns
 Context: <what was being done>
 Observation: <what was surprising, missed, or worked well>
 Rule: <actionable guideline phrased in imperative English>
-Applies to: migration | cucumber-debug | review
+Applies to: migration | cucumber-debug | review | migration (autonomous)
+Review: <omit unless this is an autonomous-mode stub — set to "pending" until a curator promotes or discards it>
 Source: <journal link / PR link / chat reference>
 ```
 

@@ -8,7 +8,7 @@ Append-only catalog of traps encountered during Cucumber → Kotlin + JUnit 5 mi
 ## <short title>
 Added: <YYYY-MM-DD>
 Source journal: `.github/copilot/journal/<file>.md`
-Severity: <routine | human-review>
+Severity (optional): <routine | human-review>
 
 ### Symptom
 <what goes wrong, how you notice>

@@ -64,17 +64,23 @@ On `blockers[]` from the verifier, classify each blocker into exactly one class:
 ### Loop
 
 ```
-attempt = 0
+# Run the initial verify before any fix attempt.
+verifier.run()
+if verifier.all_gates_passed: mark green; done
+
+# Each iteration of the loop is a fix+reverify cycle.
+# attempt=1 means the first fix attempt; attempt=retry_budget means the last.
+attempt = 1
 while attempt <= retry_budget:
-    verifier.run()
-    if verifier.all_gates_passed: mark green; break
     blockers = verifier.report.blockers
     classifications = [classify(b) for b in blockers]
     if any non-auto-fixable: escalate; break
     apply_scoped_fix(classifications)   # worker re-emit, touching only flagged files
     record_retry(attempt, blockers, classifications, applied_fix)
+    verifier.run()
+    if verifier.all_gates_passed: mark green; break
     attempt += 1
-if attempt > retry_budget and not green:
+if not green:
     escalate with full retry-log
 ```
 
