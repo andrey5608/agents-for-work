@@ -48,6 +48,28 @@ Step 5 — Verifier phase: run ./mvnw -q verify; ./mvnw test -Dtest=<NewClass>#<
 Step 6 — Write the migration journal using .github/copilot/journal/_TEMPLATE.md, update .github/copilot/journal/_INDEX.md, and ask whether to append lessons to lessons-learned/migration.md / migration-patterns.md / migration-pitfalls.md. Write only on my "y".
 ```
 
+## /migrate-auto (autonomous variant — paste as one block)
+
+```
+Act as the autonomous migration conductor for Cucumber → Kotlin + JUnit 5. Same invariants as /migrate, with two differences: the Draft approval step runs through an auto-approval policy, and verifier blockers go through a bounded retry-with-fix loop. Default retry budget is 3; accept --retry-budget=N with 0 ≤ N ≤ 5 and refuse otherwise.
+
+Step 0 — If the scenario is a Scenario Outline with Examples, fill .github/copilot/templates/scenario-outline-port-plan.template.md and STOP for my live approval. Autonomous mode never auto-approves this gate.
+
+Step 1 — One scenario only. Reject batch.
+
+Step 2 — Produce the Draft using .github/copilot/templates/migration-draft.template.md.
+
+Step 3 — Evaluate the 8 auto-approval criteria from .github/chatmodes/migrate-conductor-auto.chatmode.md and record the result in .github/copilot/templates/auto-approval-checklist.template.md: (1) plain Scenario or approved Outline plan, (2) every step uniquely bound, (3) Allure mapping fully derivable from source with no <...> placeholders, (4) no migration-pitfalls.md entry tagged Severity: human-review matches, (5) no auto-escalation-triggers entry matches, (6) target test class path does not collide, (7) src/test tree is clean in git (refuse if not), (8) --approved-concept given OR draft has zero placeholders and zero open questions. On any fail except #7, fall back to the interactive /migrate prompt. On #7 fail, refuse until committed or stashed.
+
+Step 4 — Hand off to the worker as in /migrate.
+
+Step 5 — Verifier phase as in /migrate. On blockers[], classify each: compile-error | missing-import | allure-missing | editorconfig | anti-pattern — auto-fixable; test-assertion — only if the mismatch is a clearly wrong literal copied from the feature (never to match an unexpected behavior); legacy-red | infra-error | unknown — escalate. If any blocker is non-auto-fixable, escalate immediately. Otherwise apply a scoped fix (worker touches only the flagged file) and re-verify. Repeat until green or the retry budget is exhausted.
+
+Step 6 — On green: write the journal with Mode: autonomous, include the criterion checklist and retry log, update .github/copilot/journal/_INDEX.md. If a retry exposed a novel failure class that matches no existing entry in lessons-learned/migration.md, append a single stub marked "Applies to: migration (autonomous)" and "Review: pending" — this is the only autonomous write that does not ask y.
+
+Step 7 — On escalation: write the journal as Mode: autonomous → escalated, preserve the last emitted test file (do not revert), and surface the final blocker list, retry log, and one-sentence diagnosis. Offer: retry interactively / open in worker for manual fix / abort and revert.
+```
+
 ## /add-lesson-learned
 
 ```
@@ -63,6 +85,22 @@ Ask me which catalog first (if I have not told you yet):
 Then collect fields one at a time, using the entry format for that catalog as defined in .github/prompts/add-lesson-learned.prompt.md. Rewrite my answers to English if needed. Refuse vague wisdom, restatements of existing instructions/* files, event logs, or non-English prose; explain why and offer to reframe.
 
 Show me the exact Markdown that will be appended. Ask "Append this to <path>? (y / n)". On "y" append to the end of the file under the trailing "<!-- Entries go below ... -->" marker, preserving the file's other sections. On "n" stop without writing. One entry per run.
+```
+
+## /commit
+
+```
+Act as the commit-message generator for this repo.
+
+1. Read the staged diff: run `git status --short`, `git diff --cached --stat`, and `git diff --cached`. If the cached diff is empty, stop with "nothing to commit — stage files first". Do not create an empty commit.
+2. If I said --include-unstaged, run `git add -u` first (never stage untracked files). If there are untracked `??` files in `git status --short` and I did not say --include-unstaged, surface them and ask whether I want any staged before proceeding.
+3. Read `git log -n 10 --pretty=format:"%s"` and match the prevailing subject style (imperative mood, casing, scope prefixes or ticket tags if present).
+4. Generate an English commit message: subject line imperative, ≤72 chars, no trailing period, stating the *why* or outcome — not a file list. Add a body only when the subject alone cannot carry the intent; wrap ~72 columns. No co-author trailer unless I ask. No emoji.
+5. Preview the exact message (delimited so I can see whitespace) and list the files that will be committed. Ask once: "Commit with this message? (y / n / edit)". On `edit`, take my replacement subject/body, re-preview, re-ask.
+6. On `y`, run `git commit` with the message passed via HEREDOC. Never add `--no-verify`, `--no-gpg-sign`, or `--amend`. If a pre-commit hook fails, print the failure verbatim and stop — I fix and rerun.
+7. After success, print `git rev-parse --short HEAD` and `git status --short`.
+
+Refuse: empty commits, implicit untracked staging, obvious secret signatures in the diff without my explicit go-ahead, force-push / amend / rebase requests.
 ```
 
 ## Notes

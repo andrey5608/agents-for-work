@@ -8,6 +8,7 @@ Append-only catalog of traps encountered during Cucumber → Kotlin + JUnit 5 mi
 ## <short title>
 Added: <YYYY-MM-DD>
 Source journal: `.github/copilot/journal/<file>.md`
+Severity (optional): <routine | human-review>
 
 ### Symptom
 <what goes wrong, how you notice>
@@ -21,6 +22,8 @@ Source journal: `.github/copilot/journal/<file>.md`
 ### Applies when
 - <bullet list of signals that this pitfall is relevant to the current migration>
 ```
+
+`Severity: human-review` marks pitfalls that the autonomous migration conductor cannot resolve on its own. When `migrate-conductor-auto` detects such a match against the current scenario (auto-approval criterion #4), it falls back to the interactive `/migrate` flow. Default is `routine` — omit the field to mean routine, or leave it blank for brand-new entries until classified.
 
 ## Standing traps (always check, not entries)
 

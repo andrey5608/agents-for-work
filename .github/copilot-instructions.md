@@ -27,11 +27,14 @@ This repository hosts autotests for a **backend-only** service. Test stack:
 - `/explain-test <path>` — structured explanation of a JUnit 5 or Cucumber test.
 - `/debug-cucumber <feature> [stack-trace]` — Cucumber failure diagnosis with step-to-method trace.
 - `/migrate <feature> [--scenario="..."] [--approved-concept=...]` — Cucumber → Kotlin + JUnit 5 migration.
+- `/migrate-auto <feature> [--scenario="..."] [--retry-budget=N] [--approved-concept=...]` — autonomous variant with policy-driven Draft approval and bounded retry-with-fix. Falls back to `/migrate` on any failing criterion; always blocks on Scenario Outline port plan.
 - `/add-lesson-learned [catalog]` — manually append an entry to one of the knowledge catalogs (migration / cucumber-debug / review / pattern / pitfall).
+- `/commit` — generate a concise English commit message from the staged diff and run `git commit` after explicit approval.
 
 ## Available custom chat modes (agents)
 
-- `migrate-conductor` — orchestrates a migration, owns the journal.
+- `migrate-conductor` — orchestrates an interactive migration, owns the journal.
+- `migrate-conductor-auto` — autonomous variant with auto-approval policy + retry-with-fix loop; delegates to the same worker and verifier.
 - `migrate-worker` — produces the Kotlin test code.
 - `migrate-verifier` — build / test / Allure / editorconfig gate.
 

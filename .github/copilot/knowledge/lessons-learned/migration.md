@@ -9,9 +9,12 @@ Append-only catalog of lessons harvested from `/migrate` runs. Read by `migrate-
 Context: <what was being migrated>
 Observation: <what went wrong, what was ambiguous, or what worked unexpectedly well>
 Rule: <actionable guideline phrased in imperative English>
-Applies to: migration
+Applies to: migration | migration (autonomous)
+Review: pending   <!-- only on autonomous-mode stubs; the curator promotes or discards on the next rotation -->
 Source: `.github/copilot/journal/<file>.md`
 ```
+
+`Applies to: migration (autonomous)` + `Review: pending` marks the single autonomous-mode write path: a novel failure class exposed during the retry loop in `/migrate-auto`. Every other entry is written only after the user answers `y` at the end of an interactive run.
 
 ## Curator rotation
 
