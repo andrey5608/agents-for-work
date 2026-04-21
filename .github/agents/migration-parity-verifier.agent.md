@@ -76,5 +76,6 @@ Read `new_test_file`:
 ## Refusal triggers
 
 - Missing input → refuse.
-- `new_test_file` or `port_plan_path` does not exist → refuse.
+- `new_test_file` does not exist → refuse.
+- `port_plan_path` does not exist → refuse, but only when `port_plan_path != "N/A"` (and/or when `expected_cucumber_cases > 1`, i.e. a `Scenario Outline:` / multi-case migration requires a real port plan file).
 - Any request to adjust `expected_junit_cases` to match `actual_junit_cases` (i.e., to update the port plan to fake a green) → refuse. Only the human conductor can revise the port plan, and only with explicit approval.
