@@ -27,12 +27,12 @@ Atomic verifier. Builds the Maven project and runs one or more JUnit 5 test meth
 
 1. Build: `mvn -q -DskipTests=false verify` (or `./mvnw` if present).
    - Exit code `0` → `build_status: pass`.
-   - Non-zero → `build_status: fail`, add a blocker `build-failed: <short compile-error summary>`, skip step 2.
+   - Non-zero → `build_status: fail`, add a blocker `build-failed: <short compile-error summary>`, set `new_test_status: skipped`, set `per_method: []`, and skip step 2.
 2. Run each test method: `mvn test -Dtest=<new_test_class>#<method>`.
    - Exit code `0` AND `target/surefire-reports/TEST-<class>.xml` shows `<testcase>` with no `<failure>` / `<error>` child → pass.
    - Any deviation → fail. Add a blocker `test-failed: <class>#<method>: <short reason from XML>`.
-3. Parse the XML: extract `time`, `classname`, `name` per method. Include in artifacts list.
-4. Aggregate: `new_test_status: pass` only when every listed method passed.
+3. Parse the XML: extract `time`, `classname`, `name` per method. Include only existing surefire XML paths in `artifacts`.
+4. Aggregate: `new_test_status: pass` only when every listed method passed; `fail` when at least one executed method fails; `skipped` when methods were not executed because the build failed.
 
 ## Report
 
@@ -41,7 +41,7 @@ Exactly one fenced JSON block:
 ```json
 {
   "build_status": "pass|fail",
-  "new_test_status": "pass|fail",
+  "new_test_status": "pass|fail|skipped",
   "per_method": [
     { "class": "<class>", "method": "<method>", "status": "pass|fail", "time_s": 0.0 }
   ],
