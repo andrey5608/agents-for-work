@@ -45,4 +45,4 @@ See `.github/copilot/templates/allure-mapping.template.md` for the table used in
 
 ## Verifier check
 
-`migrate-verifier` inspects `target/allure-results/*.json` after running the new test and fails the gate if expected metadata is missing.
+`results-verifier` inspects `target/allure-results/*.json` after running the new test and fails the gate if expected metadata is missing.

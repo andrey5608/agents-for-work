@@ -30,4 +30,4 @@ The agent performs a mental/manual diff against the resolved properties. If the 
 
 ## Verifier gate
 
-`migrate-verifier` runs `editorconfig-checker` when present on `PATH`. When absent, it re-reads the properties and performs rule matching on the changed hunks. A violation blocks the migration.
+`results-verifier` runs `editorconfig-checker` when present on `PATH`. When absent, it re-reads the properties and performs rule matching on the changed hunks. A violation blocks the migration.

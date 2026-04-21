@@ -1,7 +1,7 @@
 ---
-mode: 'agent'
-description: 'Diagnose a failing Cucumber scenario with step-to-method trace and lessons-learned cross-reference.'
-tools: ['codebase', 'terminal', 'findTestFiles']
+name: debug-cucumber
+description: Diagnose a failing Cucumber scenario with a step → Kotlin step-definition trace, cross-reference to the `cucumber-debug.md` lessons catalog, and a minimal repro command. Use when the user reports a failing `.feature` scenario, pastes a Cucumber stack trace, or asks to debug a Gherkin test.
+allowed-tools: shell
 ---
 
 # /debug-cucumber
