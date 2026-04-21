@@ -1,6 +1,11 @@
 ---
-description: 'Orchestrator — delegates to atomic verifiers (build/test, legacy baseline, scenario removal, Allure metadata, editorconfig, anti-patterns, migration parity) and composes their reports into the final JSON block.'
-tools: ['codebase', 'terminal']
+name: results-verifier
+description: Orchestrator — delegates to atomic verifiers (build/test, legacy baseline, scenario removal, Allure metadata, editorconfig, anti-patterns, migration parity) and composes their reports into the final JSON block.
+tools: ['agent', 'run/terminal', 'read/terminalLastCommand', 'search/codebase']
+agents: ['build-and-test-verifier', 'legacy-baseline-verifier', 'scenario-removal-verifier', 'allure-metadata-verifier', 'editorconfig-verifier', 'anti-pattern-verifier', 'migration-parity-verifier']
+user-invocable: false
+model: ['GPT-5.4 (high reasoning)', 'GPT-5.2-Codex', 'Claude Opus 4.7', 'Claude Sonnet 4.6']
+target: vscode
 ---
 
 # results-verifier
@@ -13,13 +18,13 @@ The atomic verifiers are the source of truth for each gate's pass/fail. This age
 
 | Short name                       | Gate(s)                    | File                                                   |
 |----------------------------------|----------------------------|--------------------------------------------------------|
-| `build-and-test-verifier`        | 1 (build) + 2 (new test)   | `chatmodes/build-and-test-verifier.chatmode.md`        |
-| `legacy-baseline-verifier`       | 3 (legacy baseline green)  | `chatmodes/legacy-baseline-verifier.chatmode.md`       |
-| `scenario-removal-verifier`      | 3 (scenario is gone)       | `chatmodes/scenario-removal-verifier.chatmode.md`      |
-| `allure-metadata-verifier`       | 4 (Allure labels present)  | `chatmodes/allure-metadata-verifier.chatmode.md`       |
-| `editorconfig-verifier`          | 5 (`.editorconfig`)        | `chatmodes/editorconfig-verifier.chatmode.md`          |
-| `anti-pattern-verifier`          | 6 (anti-patterns)          | `chatmodes/anti-pattern-verifier.chatmode.md`          |
-| `migration-parity-verifier`      | 7 (case-count parity)      | `chatmodes/migration-parity-verifier.chatmode.md`      |
+| `build-and-test-verifier`        | 1 (build) + 2 (new test)   | `agents/build-and-test-verifier.agent.md`              |
+| `legacy-baseline-verifier`       | 3 (legacy baseline green)  | `agents/legacy-baseline-verifier.agent.md`             |
+| `scenario-removal-verifier`      | 3 (scenario is gone)       | `agents/scenario-removal-verifier.agent.md`            |
+| `allure-metadata-verifier`       | 4 (Allure labels present)  | `agents/allure-metadata-verifier.agent.md`             |
+| `editorconfig-verifier`          | 5 (`.editorconfig`)        | `agents/editorconfig-verifier.agent.md`                |
+| `anti-pattern-verifier`          | 6 (anti-patterns)          | `agents/anti-pattern-verifier.agent.md`                |
+| `migration-parity-verifier`      | 7 (case-count parity)      | `agents/migration-parity-verifier.agent.md`            |
 
 ## Invariants
 

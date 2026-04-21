@@ -1,6 +1,10 @@
 ---
-description: 'Conductor of a single-scenario Cucumber → Kotlin + JUnit 5 migration. Plans, delegates, owns the journal.'
-tools: ['codebase', 'findTestFiles', 'terminal']
+name: migrate-conductor
+description: Conductor of a single-scenario Cucumber → Kotlin + JUnit 5 migration. Plans, delegates, owns the journal.
+tools: ['agent', 'edit', 'run/terminal', 'read/terminalLastCommand', 'search/codebase', 'search/findTestFiles', 'search/usages', 'web/fetch']
+agents: ['migrate-worker', 'results-verifier']
+model: ['GPT-5.4 (high reasoning)', 'GPT-5.2-Codex', 'Claude Opus 4.7', 'Claude Sonnet 4.6']
+target: vscode
 ---
 
 # migrate-conductor

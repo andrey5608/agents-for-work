@@ -1,7 +1,7 @@
 ---
-mode: 'agent'
-description: 'Manually append an entry to one of the knowledge catalogs (lessons-learned, migration-patterns, migration-pitfalls).'
-tools: ['codebase', 'edit']
+name: add-lesson-learned
+description: Append a single new entry to one of the append-only knowledge catalogs (`lessons-learned/migration.md`, `lessons-learned/cucumber-debug.md`, `lessons-learned/review.md`, `migration-patterns.md`, `migration-pitfalls.md`). Use when the user asks to record a lesson, canonical pattern, or pitfall, or says things like "remember this", "add a pattern", "record a pitfall".
+allowed-tools: edit
 ---
 
 # /add-lesson-learned

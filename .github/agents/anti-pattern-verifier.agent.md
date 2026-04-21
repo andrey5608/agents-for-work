@@ -1,6 +1,10 @@
 ---
-description: 'Atomic verifier — static scan of a newly-authored test file for forbidden patterns (Thread.sleep, UI libs, non-English strings, and — for migrated tests — JUnit 5 parameterization).'
-tools: ['codebase']
+name: anti-pattern-verifier
+description: Atomic verifier — static scan of a newly-authored test file for forbidden patterns (Thread.sleep, UI libs, non-English strings, and — for migrated tests — JUnit 5 parameterization).
+tools: ['search/codebase']
+user-invocable: false
+model: ['GPT-5.4 (high reasoning)', 'GPT-5.2-Codex', 'Claude Opus 4.7', 'Claude Sonnet 4.6']
+target: vscode
 ---
 
 # anti-pattern-verifier

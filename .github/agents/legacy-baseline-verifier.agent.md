@@ -1,6 +1,10 @@
 ---
-description: 'Atomic verifier — runs the legacy Cucumber scenario once and confirms the pre-migration baseline is green.'
-tools: ['codebase', 'terminal']
+name: legacy-baseline-verifier
+description: Atomic verifier — runs the legacy Cucumber scenario once and confirms the pre-migration baseline is green.
+tools: ['run/terminal', 'read/terminalLastCommand', 'search/codebase']
+user-invocable: false
+model: ['GPT-5.4 (high reasoning)', 'GPT-5.2-Codex', 'Claude Opus 4.7', 'Claude Sonnet 4.6']
+target: vscode
 ---
 
 # legacy-baseline-verifier

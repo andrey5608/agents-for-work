@@ -1,14 +1,14 @@
 ---
-mode: 'agent'
-description: 'Autonomous Cucumber → JUnit 5 migration. Policy-driven Draft approval + bounded retry-with-fix. Human gate kept only for Scenario Outline port plan.'
-tools: ['codebase', 'edit', 'terminal', 'findTestFiles']
+name: migrate-auto
+description: Delegate to the `migrate-conductor-auto` agent for an autonomous Cucumber → Kotlin + JUnit 5 migration with policy-driven Draft approval and a bounded retry-with-fix loop across both verify phases (initial + post-cleanup). Human approval is retained only for the Scenario Outline port plan. Use when the user asks for a hands-free migration or runs /migrate-auto.
+allowed-tools: shell
 ---
 
 # /migrate-auto
 
 Autonomous variant of `/migrate`. Same worker and verifier, same invariants, same one-scenario-per-run rule. Two differences:
 
-1. The Draft-approval step runs through an **auto-approval policy** (`.github/chatmodes/migrate-conductor-auto.chatmode.md`). On any failing criterion, the run falls back to the interactive conductor.
+1. The Draft-approval step runs through an **auto-approval policy** (`.github/agents/migrate-conductor-auto.agent.md`). On any failing criterion, the run falls back to the interactive conductor.
 2. On verifier `blockers[]`, the conductor runs a **bounded retry-with-fix loop** (default budget: 3 retries). Non-auto-fixable classes escalate immediately.
 
 The **Scenario Outline port plan** still requires live human approval. Autonomous mode never short-circuits that gate.
@@ -31,7 +31,7 @@ The **Scenario Outline port plan** still requires live human approval. Autonomou
 
 ## Behavior
 
-1. Enter `migrate-conductor-auto` chat mode.
+1. Delegate to the `migrate-conductor-auto` agent.
 2. If the target is a `Scenario Outline`, the conductor fills `scenario-outline-port-plan.template.md` and **blocks for human approval** before anything else.
 3. The conductor evaluates the 8 auto-approval criteria and writes the result into `auto-approval-checklist.template.md`. All ✓ → the Draft is auto-approved. Any ✗ → fall back to interactive `/migrate`.
 4. The conductor hands off to `migrate-worker` (`task: write-test`).
@@ -67,10 +67,10 @@ For hands-free runs, create a GitHub issue titled `Migrate scenario "<name>" fro
 
 ## Related files
 
-- `.github/chatmodes/migrate-conductor-auto.chatmode.md`
-- `.github/chatmodes/migrate-conductor.chatmode.md` (interactive fallback)
-- `.github/chatmodes/migrate-worker.chatmode.md`
-- `.github/chatmodes/results-verifier.chatmode.md`
+- `.github/agents/migrate-conductor-auto.agent.md`
+- `.github/agents/migrate-conductor.agent.md` (interactive fallback)
+- `.github/agents/migrate-worker.agent.md`
+- `.github/agents/results-verifier.agent.md`
 - `.github/copilot/templates/auto-approval-checklist.template.md`
 - `.github/copilot/templates/migration-draft.template.md`
 - `.github/copilot/templates/scenario-outline-port-plan.template.md`

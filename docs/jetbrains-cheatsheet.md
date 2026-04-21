@@ -1,6 +1,6 @@
 # JetBrains IntelliJ IDEA — Copilot Chat cheat sheet
 
-IntelliJ's GitHub Copilot Chat auto-loads `.github/copilot-instructions.md` and `.github/instructions/*.instructions.md`, so global rules and scoped rules work out of the box. It does **not** pick up `.github/prompts/*.prompt.md` or `.github/chatmodes/*.chatmode.md`. Use the copy-paste prompts below to reproduce the slash commands and chat modes available in VS Code.
+IntelliJ's GitHub Copilot Chat auto-loads `.github/copilot-instructions.md` and `.github/instructions/*.instructions.md`, so global rules and scoped rules work out of the box. It does **not** pick up `.github/skills/<name>/SKILL.md` or `.github/agents/*.agent.md` — those are VS Code features. Use the copy-paste prompts below to reproduce each slash command and each agent's role.
 
 All prompts are English and produce English output regardless of your input language — this is enforced by the global instructions.
 
@@ -59,7 +59,7 @@ Step 1 — One scenario only. Reject batch.
 
 Step 2 — Produce the Draft using .github/copilot/templates/migration-draft.template.md.
 
-Step 3 — Evaluate the 8 auto-approval criteria from .github/chatmodes/migrate-conductor-auto.chatmode.md and record the result in .github/copilot/templates/auto-approval-checklist.template.md: (1) plain Scenario or approved Outline plan, (2) every step uniquely bound, (3) Allure mapping fully derivable from source with no <...> placeholders, (4) no migration-pitfalls.md entry tagged Severity: human-review matches, (5) no auto-escalation-triggers entry matches, (6) target test class path does not collide, (7) src/test tree is clean in git (refuse if not), (8) --approved-concept given OR draft has zero placeholders and zero open questions. On any fail except #7, fall back to the interactive /migrate prompt. On #7 fail, refuse until committed or stashed.
+Step 3 — Evaluate the 8 auto-approval criteria from .github/agents/migrate-conductor-auto.agent.md and record the result in .github/copilot/templates/auto-approval-checklist.template.md: (1) plain Scenario or approved Outline plan, (2) every step uniquely bound, (3) Allure mapping fully derivable from source with no <...> placeholders, (4) no migration-pitfalls.md entry tagged Severity: human-review matches, (5) no auto-escalation-triggers entry matches, (6) target test class path does not collide, (7) src/test tree is clean in git (refuse if not), (8) --approved-concept given OR draft has zero placeholders and zero open questions. On any fail except #7, fall back to the interactive /migrate skill. On #7 fail, refuse until committed or stashed.
 
 Step 4 — Hand off to the worker as in /migrate.
 
@@ -82,7 +82,7 @@ Ask me which catalog first (if I have not told you yet):
 - pattern → .github/copilot/knowledge/migration-patterns.md
 - pitfall → .github/copilot/knowledge/migration-pitfalls.md
 
-Then collect fields one at a time, using the entry format for that catalog as defined in .github/prompts/add-lesson-learned.prompt.md. Rewrite my answers to English if needed. Refuse vague wisdom, restatements of existing instructions/* files, event logs, or non-English prose; explain why and offer to reframe.
+Then collect fields one at a time, using the entry format for that catalog as defined in .github/skills/add-lesson-learned/SKILL.md. Rewrite my answers to English if needed. Refuse vague wisdom, restatements of existing instructions/* files, event logs, or non-English prose; explain why and offer to reframe.
 
 Show me the exact Markdown that will be appended. Ask "Append this to <path>? (y / n)". On "y" append to the end of the file under the trailing "<!-- Entries go below ... -->" marker, preserving the file's other sections. On "n" stop without writing. One entry per run.
 ```
@@ -123,6 +123,21 @@ Act as the commit-message generator for this repo.
 7. After success, print `git rev-parse --short HEAD` and `git status --short`.
 
 Refuse: empty commits, implicit untracked staging, obvious secret signatures in the diff without my explicit go-ahead, force-push / amend / rebase requests.
+```
+
+## /skill-creator
+
+```
+Act as the skill scaffolder for this repo. I want to add a new VS Code Copilot skill under `.github/skills/<name>/SKILL.md`.
+
+1. Ask me for the skill name if I have not given it yet. Validate kebab-case `[a-z][a-z0-9-]*`, length 3–32. Refuse if `.github/skills/<name>/` already exists — no overwrites.
+2. Ask for a one-line description that names the action, the target artifact, and a "Use when ..." clause. Refuse vague ones like "helps with tests"; ask me to reframe.
+3. Ask whether the skill needs `allowed-tools: shell`, `allowed-tools: edit`, or neither. A skill that only delegates to an agent carries no `allowed-tools`.
+4. Ask whether `/<name>` delegates to a custom agent. If yes, take the agent name and verify `.github/agents/<agent>.agent.md` exists — refuse otherwise. If no, collect the direct steps.
+5. Collect the body fields one at a time and rewrite to English if needed: Arguments, Behavior (numbered), Invariants restated (inherit from `.github/copilot-instructions.md`; do not restate), Refusals (name the refused thing + the reason), Related files.
+6. Refuse: name collides with an existing slash command, description restates what the delegated agent already documents, non-English prose, instructions that weaken an existing invariant (e.g., "skip Allure check"), requests to bypass user approval that the underlying agent normally asks for.
+7. Preview the full SKILL.md in a fenced block plus the three registry diffs: `.github/copilot-instructions.md` (Available skills), `docs/README.md` (Skills (slash commands) list + per-command paragraph block), `docs/jetbrains-cheatsheet.md` (new `## /<name>` section).
+8. Ask exactly once: "Create `/<name>` at `.github/skills/<name>/SKILL.md` and register it in copilot-instructions + docs? (y / n / edit)". On `y`: write the SKILL.md and append the three registry lines. On `n`: stop. On `edit`: collect the delta on whichever field I name, re-preview, re-ask. English only.
 ```
 
 ## Notes

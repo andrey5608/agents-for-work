@@ -157,13 +157,13 @@ Assign a GitHub issue titled `Migrate scenario "<name>" from <feature-path>` to 
 
 ## Related files
 
-- Interactive prompt: `.github/prompts/migrate.prompt.md`
-- Autonomous prompt: `.github/prompts/migrate-auto.prompt.md`
-- Interactive conductor: `.github/chatmodes/migrate-conductor.chatmode.md`
-- Autonomous conductor: `.github/chatmodes/migrate-conductor-auto.chatmode.md`
-- Worker: `.github/chatmodes/migrate-worker.chatmode.md`
-- Verifier orchestrator: `.github/chatmodes/results-verifier.chatmode.md`
-- Atomic verifiers: `.github/chatmodes/{build-and-test,legacy-baseline,scenario-removal,allure-metadata,editorconfig,anti-pattern,migration-parity}-verifier.chatmode.md`
+- Interactive skill: `.github/skills/migrate/SKILL.md`
+- Autonomous skill: `.github/skills/migrate-auto/SKILL.md`
+- Interactive conductor: `.github/agents/migrate-conductor.agent.md`
+- Autonomous conductor: `.github/agents/migrate-conductor-auto.agent.md`
+- Worker: `.github/agents/migrate-worker.agent.md`
+- Verifier orchestrator: `.github/agents/results-verifier.agent.md`
+- Atomic verifiers: `.github/agents/{build-and-test,legacy-baseline,scenario-removal,allure-metadata,editorconfig,anti-pattern,migration-parity}-verifier.agent.md`
 - Templates: `.github/copilot/templates/*.template.md` (including `auto-approval-checklist.template.md`)
 - Journal: `.github/copilot/journal/{_INDEX,_TEMPLATE}.md`
 - Knowledge: `.github/copilot/knowledge/**`

@@ -1,7 +1,6 @@
 ---
-mode: 'agent'
-description: 'Explain a JUnit 5 Kotlin test or a Cucumber scenario in a structured, English format.'
-tools: ['codebase', 'findTestFiles']
+name: explain-test
+description: Explain a JUnit 5 Kotlin test (`.kt`) or a Cucumber scenario (`.feature`) in a structured English format (Purpose → Preconditions → Actions → Assertions → Bugs it catches → Limitations) with Allure metadata listed and, for Cucumber, a step → step-definition method trace. Use when the user asks what a test does, how it works, or to explain a `.kt` or `.feature` file.
 ---
 
 # /explain-test

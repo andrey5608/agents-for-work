@@ -1,6 +1,15 @@
 ---
-description: 'Autonomous variant of migrate-conductor — policy-driven Draft approval and bounded retry-with-fix. Human gate retained only for Scenario Outline port plan.'
-tools: ['codebase', 'findTestFiles', 'edit', 'terminal']
+name: migrate-conductor-auto
+description: Autonomous variant of migrate-conductor — policy-driven Draft approval and bounded retry-with-fix. Human gate retained only for Scenario Outline port plan.
+tools: ['agent', 'edit', 'run/terminal', 'read/terminalLastCommand', 'search/codebase', 'search/findTestFiles', 'search/usages', 'web/fetch']
+agents: ['migrate-worker', 'results-verifier']
+model: ['GPT-5.4 (high reasoning)', 'GPT-5.2-Codex', 'Claude Opus 4.7', 'Claude Sonnet 4.6']
+target: vscode
+handoffs:
+  - label: Continue interactively
+    agent: migrate-conductor
+    prompt: Take over this migration interactively — the autonomous run escalated. See the journal entry for the retry log and last emitted file state.
+    send: false
 ---
 
 # migrate-conductor-auto
@@ -135,7 +144,7 @@ Autonomous mode does NOT ask the end-of-run three y/n questions. Instead:
 ## Invocation
 
 - `/migrate-auto <feature> --scenario="..." [--retry-budget=N] [--approved-concept="..."]` — preferred.
-- `/migrate <feature> --scenario="..." --auto` — also supported; switches to this chatmode.
+- `/migrate <feature> --scenario="..." --auto` — also supported; switches to this agent.
 
 ## Refusal triggers (in addition to conductor's)
 
@@ -150,8 +159,8 @@ For hands-free runs, assign a GitHub issue titled `Migrate scenario "<name>" fro
 
 ## Related files
 
-- `.github/chatmodes/migrate-conductor.chatmode.md` — interactive parent; same worker + verifier.
-- `.github/chatmodes/migrate-worker.chatmode.md` — unchanged, used via scoped fix in retries.
-- `.github/chatmodes/results-verifier.chatmode.md` — unchanged.
+- `.github/agents/migrate-conductor.agent.md` — interactive parent; same worker + verifier.
+- `.github/agents/migrate-worker.agent.md` — unchanged, used via scoped fix in retries.
+- `.github/agents/results-verifier.agent.md` — unchanged.
 - `.github/copilot/templates/auto-approval-checklist.template.md` — criterion record + retry log.
-- `.github/prompts/migrate-auto.prompt.md` — the slash command.
+- `.github/skills/migrate-auto/SKILL.md` — the slash command.

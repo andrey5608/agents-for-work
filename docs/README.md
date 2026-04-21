@@ -1,12 +1,14 @@
 # agents-for-work — GitHub Copilot assets for Kotlin backend autotests
 
-This repository is a **template** of GitHub Copilot assets (instructions, prompts, chat modes, knowledge base, journal) tailored for a Kotlin + JUnit 5 / Cucumber / Allure backend autotest project built with Maven and running on Jenkins CI.
+This repository is a **template** of GitHub Copilot assets (instructions, skills, custom agents, knowledge base, journal) tailored for a Kotlin + JUnit 5 / Cucumber / Allure backend autotest project built with Maven and running on Jenkins CI.
+
+The agent/skill structure targets VS Code Copilot's custom-agents model: each agent is a standalone assistant with its own tools and subagents, not a chat-mode style of the same assistant.
 
 ## What you get
 
 - **Global repo instructions** — `.github/copilot-instructions.md`
 - **Scoped instructions** — `.github/instructions/*.instructions.md` for Kotlin, JUnit 5, Cucumber, Allure, review rules, `.editorconfig` compliance, English-output enforcement, and migration knowledge.
-- **Prompts (slash commands)** — `.github/prompts/*.prompt.md`:
+- **Skills (slash commands)** — `.github/skills/<name>/SKILL.md`:
   - `/review` — one-command review against 10 rubrics
   - `/explain-test` — structured test explanation
   - `/debug-cucumber` — Cucumber failure diagnosis with step-to-method trace
@@ -15,13 +17,14 @@ This repository is a **template** of GitHub Copilot assets (instructions, prompt
   - `/add-lesson-learned` — manually append an entry to a knowledge catalog
   - `/commit` — generate a concise English commit message from the staged diff and run `git commit` after explicit approval
   - `/create-api-autotest` — author a new Kotlin + JUnit 5 API test class for a specified endpoint set, mirroring the target module's existing architecture
-- **Chat modes (agents)** — `.github/chatmodes/*.chatmode.md`:
-  - `migrate-conductor` — orchestrates an interactive migration, owns the journal
-  - `migrate-conductor-auto` — autonomous variant with auto-approval + retry loop; falls back to `migrate-conductor` on any failing criterion
-  - `migrate-worker` — produces Kotlin test code (`task: write-test`) and, after a green initial verify, removes the migrated Cucumber scenario (`task: delete-scenario`)
-  - `results-verifier` — orchestrator that composes atomic verifiers into the final JSON report; reused by the authoring flow with `source: authored`
-  - Atomic verifiers: `build-and-test-verifier`, `legacy-baseline-verifier`, `scenario-removal-verifier`, `allure-metadata-verifier`, `editorconfig-verifier`, `anti-pattern-verifier`, `migration-parity-verifier` — each with a single responsibility, composed by `results-verifier`
-  - `api-test-author` — authors new Kotlin + JUnit 5 API tests for a specified endpoint set; extracts and mirrors the target module's existing architectural scheme
+  - `/skill-creator` — scaffold a new skill at `.github/skills/<name>/SKILL.md` and register it across the repo's skill indexes (copilot-instructions, docs/README, jetbrains-cheatsheet)
+- **Custom agents** — `.github/agents/*.agent.md`:
+  - `migrate-conductor` — orchestrates an interactive migration, owns the journal; subagents: `migrate-worker`, `results-verifier`
+  - `migrate-conductor-auto` — autonomous variant with auto-approval + retry loop; handoff to `migrate-conductor` on escalation
+  - `migrate-worker` — produces Kotlin test code (`task: write-test`) and, after a green initial verify, removes the migrated Cucumber scenario (`task: delete-scenario`); not user-invocable directly
+  - `results-verifier` — orchestrator that composes atomic verifiers into the final JSON report; reused by the authoring flow with `source: authored`; not user-invocable directly
+  - Atomic verifiers — `build-and-test-verifier`, `legacy-baseline-verifier`, `scenario-removal-verifier`, `allure-metadata-verifier`, `editorconfig-verifier`, `anti-pattern-verifier`, `migration-parity-verifier` — each with a single responsibility, composed by `results-verifier`; none user-invocable directly
+  - `api-test-author` — authors new Kotlin + JUnit 5 API tests for a specified endpoint set; extracts and mirrors the target module's existing architectural scheme; subagent: `results-verifier`
 - **Knowledge base** — `.github/copilot/knowledge/`:
   - `lessons-learned/{migration,cucumber-debug,review}.md` (append-only)
   - `migration-patterns.md`, `migration-pitfalls.md`
@@ -46,7 +49,8 @@ This repository is a **template** of GitHub Copilot assets (instructions, prompt
 - `/add-lesson-learned [catalog]` — record a past solution or recurring issue manually, outside the end-of-run prompts.
 - `/commit` — generate a concise English subject line (and body only when the subject cannot carry the intent alone) from the staged diff, preview it, and run `git commit` on `y`. Add `--include-unstaged` to run `git add -u` first (never stages untracked files). Add `--message="..."` to skip generation and use the provided subject verbatim. Refuses to pass `--no-verify` or to `--amend`.
 - `/create-api-autotest --module=<path> --endpoints="METHOD /path, ..."` — author new API tests. The agent locates existing tests under the module, extracts the module's architectural scheme (HTTP client, base class, fixtures, auth wiring, Allure convention, parameterization style), fills `api-test-draft.template.md`, asks for approval (unless `--approved-concept=...`), writes one test class with one `@Test` per (endpoint × scenario), and runs the verifier with `source: authored` (Gate 3 legacy-parity is `skipped`; Gate 6 does not reject `@ParameterizedTest`). Refuses if the module has no tests **and** no sibling module to mirror.
-- Switch to `migrate-conductor` or `migrate-conductor-auto` chat mode when you want the full orchestrated flow; either conductor delegates to `migrate-worker` and `results-verifier`.
+- `/skill-creator [name] [--delegates-to=<agent>]` — interactively scaffold a new skill at `.github/skills/<name>/SKILL.md`. Collects name, description, allowed-tools, delegation target (agent or direct), usage, behavior, invariants, and refusals; previews the full SKILL.md + registry diffs; writes on `y`; registers the command in `.github/copilot-instructions.md`, `docs/README.md`, and `docs/jetbrains-cheatsheet.md`.
+- Pick `migrate-conductor` or `migrate-conductor-auto` from the agents dropdown when you want to drive the full orchestrated flow directly without going through a slash command. Either conductor delegates to `migrate-worker` and `results-verifier`.
 
 ## Autonomous migration — hands-free run
 
@@ -60,7 +64,7 @@ For CI-isolated runs, assign a GitHub issue titled `Migrate scenario "<name>" fr
 
 ## Use from IntelliJ IDEA Copilot Chat
 
-IntelliJ does not natively understand `.prompt.md` or `.chatmode.md` files. Use `docs/jetbrains-cheatsheet.md` — it contains copy-paste prompt strings that reproduce the behavior. Global `copilot-instructions.md` and `instructions/*` are auto-loaded.
+IntelliJ, Eclipse, and Xcode do not natively invoke custom agents or skills. Use `docs/jetbrains-cheatsheet.md` — it contains copy-paste prompt strings that reproduce the behavior. Global `copilot-instructions.md` and `instructions/*` are auto-loaded there.
 
 ## Principles you are agreeing to
 

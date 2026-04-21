@@ -1,6 +1,10 @@
 ---
-description: 'Atomic verifier — confirms a migrated Cucumber scenario has been deleted from its .feature and no longer runs through the Cucumber runner.'
-tools: ['codebase', 'terminal']
+name: scenario-removal-verifier
+description: Atomic verifier — confirms a migrated Cucumber scenario has been deleted from its .feature and no longer runs through the Cucumber runner.
+tools: ['run/terminal', 'read/terminalLastCommand', 'search/codebase']
+user-invocable: false
+model: ['GPT-5.4 (high reasoning)', 'GPT-5.2-Codex', 'Claude Opus 4.7', 'Claude Sonnet 4.6']
+target: vscode
 ---
 
 # scenario-removal-verifier

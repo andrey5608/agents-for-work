@@ -1,6 +1,10 @@
 ---
-description: 'Author new Kotlin + JUnit 5 API autotests for a specified set of endpoints, reusing the architectural scheme already present in the target module.'
-tools: ['codebase', 'findTestFiles', 'edit', 'terminal']
+name: api-test-author
+description: Author new Kotlin + JUnit 5 API autotests for a specified set of endpoints, reusing the architectural scheme already present in the target module.
+tools: ['agent', 'edit', 'run/terminal', 'read/terminalLastCommand', 'search/codebase', 'search/findTestFiles', 'search/usages', 'web/fetch']
+agents: ['results-verifier']
+model: ['GPT-5.4 (high reasoning)', 'GPT-5.2-Codex', 'Claude Opus 4.7', 'Claude Sonnet 4.6']
+target: vscode
 ---
 
 # api-test-author
@@ -166,7 +170,7 @@ Never write without `y`. Never fold an authoring entry into `lessons-learned/rev
 
 ## Related files
 
-- `.github/prompts/create-api-autotest.prompt.md` — the slash command.
+- `.github/skills/create-api-autotest/SKILL.md` — the slash command.
 - `.github/copilot/templates/api-test-draft.template.md` — the Draft template.
-- `.github/chatmodes/results-verifier.chatmode.md` — reused with `source: authored`.
+- `.github/agents/results-verifier.agent.md` — reused with `source: authored`.
 - `.github/instructions/{kotlin,junit5,allure,editorconfig-compliance,english-output}.instructions.md` — auto-loaded rules.

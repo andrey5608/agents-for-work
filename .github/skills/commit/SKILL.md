@@ -1,7 +1,7 @@
 ---
-mode: 'agent'
-description: 'Generate a concise English commit message from the staged diff and run git commit after user approval.'
-tools: ['codebase', 'terminal']
+name: commit
+description: Generate a concise English commit message from the staged diff (subject ≤72 chars, imperative, no trailing period, optional body only when the subject cannot carry the intent) and run `git commit` via HEREDOC after explicit user approval. Refuses `--no-verify` and `--amend`. Use when the user asks to commit staged changes or runs /commit.
+allowed-tools: shell
 ---
 
 # /commit
@@ -80,4 +80,4 @@ Generate a lean English commit message from the current staged changes and run `
 ## Related files
 
 - `.github/copilot-instructions.md` — global hard rules (including English output).
-- `.github/prompts/migrate.prompt.md`, `.github/prompts/migrate-auto.prompt.md` — produce the journal entries that `/commit` often has to describe.
+- `.github/skills/migrate/SKILL.md`, `.github/skills/migrate-auto/SKILL.md` — produce the journal entries that `/commit` often has to describe.

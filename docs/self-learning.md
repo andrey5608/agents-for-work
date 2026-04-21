@@ -22,7 +22,7 @@ Two migration-specific catalogs (also append-only):
 ## Three ways to write an entry
 
 1. **Agent-proposed, user-confirmed** — the end-of-run prompt inside `/review`, `/debug-cucumber`, or `/migrate` asks once whether to append. This is the default path.
-2. **User-initiated manual entry** — run `/add-lesson-learned [catalog]` at any time to record past solutions or recurring issues outside of a run. The agent collects the fields, previews the entry, and appends only after an explicit `y`. See `.github/prompts/add-lesson-learned.prompt.md`.
+2. **User-initiated manual entry** — run `/add-lesson-learned [catalog]` at any time to record past solutions or recurring issues outside of a run. The agent collects the fields, previews the entry, and appends only after an explicit `y`. See `.github/skills/add-lesson-learned/SKILL.md`.
 3. **Autonomous-mode stub (narrow)** — `/migrate-auto` may append a single entry to `lessons-learned/migration.md` without live `y` **only** when the retry loop exposed a novel failure class that matches no existing entry. The stub is marked `Applies to: migration (autonomous)` and `Review: pending`; the curator promotes or discards it at the next rotation. This is the only write path that does not require an explicit user confirmation.
 
 All three paths use the same entry formats and the same anti-pattern refusals.

@@ -9,7 +9,7 @@ user
  │  /review   (default scope: diff vs origin/main)
  │  /review <ref|PR>
  ▼
-prompt: .github/prompts/review.prompt.md
+skill: .github/skills/review/SKILL.md
  │  1  Resolve the diff scope
  │  2  Read full contents of every changed file
  │  3  Load instructions: review-rules, kotlin, junit5, cucumber, allure, editorconfig-compliance, english-output
@@ -60,7 +60,7 @@ Paste the `/review` string from `docs/jetbrains-cheatsheet.md` into Copilot Chat
 
 ## Related files
 
-- Prompt: `.github/prompts/review.prompt.md`
+- Skill: `.github/skills/review/SKILL.md`
 - Rubric set: `.github/instructions/review-rules.instructions.md`
 - Template: `.github/copilot/templates/review-checklist.template.md`
 - Lessons: `.github/copilot/knowledge/lessons-learned/review.md`

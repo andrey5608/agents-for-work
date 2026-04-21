@@ -1,6 +1,10 @@
 ---
-description: 'Atomic verifier — confirms a JUnit 5 test file covers exactly the set of Cucumber cases that were (or will be) removed from the .feature. Used only for migration flows.'
-tools: ['codebase']
+name: migration-parity-verifier
+description: Atomic verifier — confirms a JUnit 5 test file covers exactly the set of Cucumber cases that were (or will be) removed from the .feature. Used only for migration flows.
+tools: ['search/codebase']
+user-invocable: false
+model: ['GPT-5.4 (high reasoning)', 'GPT-5.2-Codex', 'Claude Opus 4.7', 'Claude Sonnet 4.6']
+target: vscode
 ---
 
 # migration-parity-verifier

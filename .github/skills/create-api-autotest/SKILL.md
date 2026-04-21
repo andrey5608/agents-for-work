@@ -1,7 +1,7 @@
 ---
-mode: 'agent'
-description: 'Author new Kotlin + JUnit 5 API autotests for a specified endpoint set, reusing the architectural scheme already present in the target module.'
-tools: ['codebase', 'edit', 'terminal', 'findTestFiles']
+name: create-api-autotest
+description: Delegate to the `api-test-author` agent to write a Kotlin + JUnit 5 API test class for a specified set of endpoints in a given module, mirroring the module's existing architectural scheme (HTTP client, base class, fixtures, Allure conventions, parameterization style). Use when the user asks to create, author, or generate a new API test for a module / endpoint set, or runs /create-api-autotest.
+allowed-tools: shell
 ---
 
 # /create-api-autotest
@@ -30,7 +30,7 @@ Exactly one of `--endpoints` or `--spec` must be present.
 
 ## Behavior
 
-1. Enter `api-test-author` chat mode (see `.github/chatmodes/api-test-author.chatmode.md`).
+1. Delegate to the `api-test-author` agent (see `.github/agents/api-test-author.agent.md`).
 2. The agent locates existing tests in `<module>/src/test/kotlin/**` and extracts the module's architectural scheme. If the module has no tests, it asks for a sibling module to mirror and refuses otherwise.
 3. The agent resolves the endpoint list — HTTP method, path, parameters, request/response shapes, auth requirement. Ambiguities block with a targeted question. Nothing is guessed.
 4. The agent fills `.github/copilot/templates/api-test-draft.template.md` and, unless `--approved-concept` was passed, asks for approval.
@@ -62,7 +62,7 @@ Exactly one of `--endpoints` or `--spec` must be present.
 
 ## Related files
 
-- `.github/chatmodes/api-test-author.chatmode.md`
-- `.github/chatmodes/results-verifier.chatmode.md` (reused with `source: authored`)
+- `.github/agents/api-test-author.agent.md`
+- `.github/agents/results-verifier.agent.md` (reused with `source: authored`)
 - `.github/copilot/templates/api-test-draft.template.md`
 - `.github/copilot/journal/_TEMPLATE.md`

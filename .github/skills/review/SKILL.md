@@ -1,7 +1,7 @@
 ---
-mode: 'agent'
-description: 'One-command code review against the pre-filled Kotlin/JUnit5/Cucumber/Allure backend rubrics.'
-tools: ['codebase', 'terminal', 'findTestFiles']
+name: review
+description: Review a diff (or an explicit ref) against the pre-filled Kotlin / JUnit 5 / Cucumber / Allure backend rubric set. Emits a severity-tagged checklist with `file:line` anchors and a lesson-recording offer at the end. Use when the user asks for a code review, a diff review, or runs /review.
+allowed-tools: shell
 ---
 
 # /review

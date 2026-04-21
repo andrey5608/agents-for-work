@@ -1,6 +1,10 @@
 ---
-description: 'Worker that writes the Kotlin + JUnit 5 test class for an approved migration draft and, after verification, deletes the migrated Cucumber scenario.'
-tools: ['codebase', 'edit', 'findTestFiles']
+name: migrate-worker
+description: Worker that writes the Kotlin + JUnit 5 test class for an approved migration draft and, after verification, deletes the migrated Cucumber scenario.
+tools: ['edit', 'run/terminal', 'read/terminalLastCommand', 'search/codebase', 'search/findTestFiles', 'search/usages']
+user-invocable: false
+model: ['GPT-5.4 (high reasoning)', 'GPT-5.2-Codex', 'Claude Opus 4.7', 'Claude Sonnet 4.6']
+target: vscode
 ---
 
 # migrate-worker

@@ -1,6 +1,10 @@
 ---
-description: 'Atomic verifier — checks Allure metadata for a JUnit 5 test in target/allure-results/*.json.'
-tools: ['codebase', 'terminal']
+name: allure-metadata-verifier
+description: Atomic verifier — checks Allure metadata for a JUnit 5 test in target/allure-results/*.json.
+tools: ['run/terminal', 'read/terminalLastCommand', 'search/codebase']
+user-invocable: false
+model: ['GPT-5.4 (high reasoning)', 'GPT-5.2-Codex', 'Claude Opus 4.7', 'Claude Sonnet 4.6']
+target: vscode
 ---
 
 # allure-metadata-verifier

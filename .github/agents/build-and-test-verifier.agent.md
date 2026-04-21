@@ -1,6 +1,10 @@
 ---
-description: 'Atomic verifier — builds the project and runs a specific JUnit 5 test, parses surefire XML. Emits build_status + new_test_status.'
-tools: ['codebase', 'terminal']
+name: build-and-test-verifier
+description: Atomic verifier — builds the project and runs a specific JUnit 5 test, parses surefire XML. Emits build_status + new_test_status.
+tools: ['run/terminal', 'read/terminalLastCommand', 'search/codebase']
+user-invocable: false
+model: ['GPT-5.4 (high reasoning)', 'GPT-5.2-Codex', 'Claude Opus 4.7', 'Claude Sonnet 4.6']
+target: vscode
 ---
 
 # build-and-test-verifier
