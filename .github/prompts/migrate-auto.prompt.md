@@ -34,11 +34,12 @@ The **Scenario Outline port plan** still requires live human approval. Autonomou
 1. Enter `migrate-conductor-auto` chat mode.
 2. If the target is a `Scenario Outline`, the conductor fills `scenario-outline-port-plan.template.md` and **blocks for human approval** before anything else.
 3. The conductor evaluates the 8 auto-approval criteria and writes the result into `auto-approval-checklist.template.md`. All ✓ → the Draft is auto-approved. Any ✗ → fall back to interactive `/migrate`.
-4. The conductor hands off to `migrate-worker`.
-5. The conductor hands off to `results-verifier`.
+4. The conductor hands off to `migrate-worker` (`task: write-test`).
+5. The conductor hands off to `results-verifier` with `phase: initial`.
 6. On `blockers[]`: classify each blocker. If all are auto-fixable, apply a scoped fix (worker touches only flagged files) and re-verify. Repeat until green or budget exhausted.
-7. On green: write the migration journal with `Mode: autonomous`, full criterion checklist, and retry log. Update `_INDEX.md`. Novel failure classes observed during retries produce a single `Review: pending` lesson stub.
-8. On escalation (non-auto-fixable blocker, or budget exhausted): write the journal as `Mode: autonomous → escalated`, leave the test file in its last emitted state, surface the final blocker list + retry log + one-sentence diagnosis, and offer `retry interactively / open in worker / abort and revert`.
+7. On green `phase: initial`: the conductor hands off to `migrate-worker` again with `task: delete-scenario` to remove the migrated scenario from the `.feature`, then runs `results-verifier` with `phase: post-cleanup` against the same retry budget. Post-cleanup blockers go through the same classifier — cleanup-incomplete is auto-fixable (re-run the deletion); parity-mismatch and cleanup-overreach escalate.
+8. On final green: write the migration journal with `Mode: autonomous`, full criterion checklist, retry log, both verifier reports, and the cleanup report. Update `_INDEX.md`. Novel failure classes observed during retries produce a single `Review: pending` lesson stub.
+9. On escalation (non-auto-fixable blocker, or budget exhausted): write the journal as `Mode: autonomous → escalated` with the phase at which the escalation happened, leave the test file in its last emitted state, and — if escalation happened during `phase: post-cleanup` — surface the `.feature` modification explicitly. Do not silently revert the `.feature`; ask the user to `git checkout -- <feature_path>` if they want the scenario back. Offer `retry interactively / open in worker / abort and (optionally) revert`.
 
 ## Invariants restated
 

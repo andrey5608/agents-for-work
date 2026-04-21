@@ -18,8 +18,9 @@ This repository is a **template** of GitHub Copilot assets (instructions, prompt
 - **Chat modes (agents)** — `.github/chatmodes/*.chatmode.md`:
   - `migrate-conductor` — orchestrates an interactive migration, owns the journal
   - `migrate-conductor-auto` — autonomous variant with auto-approval + retry loop; falls back to `migrate-conductor` on any failing criterion
-  - `migrate-worker` — produces Kotlin test code
-  - `results-verifier` — build / test / Allure / editorconfig gate; reused by the authoring flow with `source: authored`
+  - `migrate-worker` — produces Kotlin test code (`task: write-test`) and, after a green initial verify, removes the migrated Cucumber scenario (`task: delete-scenario`)
+  - `results-verifier` — orchestrator that composes atomic verifiers into the final JSON report; reused by the authoring flow with `source: authored`
+  - Atomic verifiers: `build-and-test-verifier`, `legacy-baseline-verifier`, `scenario-removal-verifier`, `allure-metadata-verifier`, `editorconfig-verifier`, `anti-pattern-verifier`, `migration-parity-verifier` — each with a single responsibility, composed by `results-verifier`
   - `api-test-author` — authors new Kotlin + JUnit 5 API tests for a specified endpoint set; extracts and mirrors the target module's existing architectural scheme
 - **Knowledge base** — `.github/copilot/knowledge/`:
   - `lessons-learned/{migration,cucumber-debug,review}.md` (append-only)

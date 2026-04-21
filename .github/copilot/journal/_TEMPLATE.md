@@ -37,24 +37,80 @@
 
 ## Retry log (autonomous only — omit the section if `Mode: interactive`)
 
-| attempt | blockers (summary) | classifications | applied fix | outcome |
-|---------|--------------------|-----------------|-------------|---------|
-| 0       |                    |                 |             |         |
+| attempt | phase | blockers (summary) | classifications | applied fix | outcome |
+|---------|-------|--------------------|-----------------|-------------|---------|
+| 0       |       |                    |                 |             |         |
 
-## Verifier report
+## Verifier report — phase: initial
 
 ```json
 {
+  "source": "migration",
+  "phase": "initial",
   "build_status": "pass|fail",
   "new_test_status": "pass|fail",
   "legacy_test_status": "pass|fail",
   "allure_metadata_ok": true,
   "editorconfig_ok": true,
+  "antipatterns_ok": true,
+  "parity_ok": true,
+  "parity_counts": {
+    "junit_cases_actual": 0,
+    "cucumber_cases_expected": 0,
+    "rows_dropped": 0
+  },
   "duration_ms": 0,
   "artifacts": [
     "target/surefire-reports/TEST-<class>.xml",
     "target/allure-results/<uuid>-result.json"
-  ]
+  ],
+  "blockers": []
+}
+```
+
+## Cleanup — delete-scenario report
+
+```json
+{
+  "feature_path": "<path>",
+  "scenario_name": "<name>",
+  "scenario_type": "plain|outline",
+  "lines_removed": 0,
+  "tags_removed": [],
+  "example_rows_removed": 0,
+  "file_left_empty_of_scenarios": false,
+  "orphaned_step_definitions_candidates": []
+}
+```
+
+Notes on orphaned step definitions (user decides whether to delete):
+
+- <bullet list; or `none`>
+
+## Verifier report — phase: post-cleanup
+
+```json
+{
+  "source": "migration",
+  "phase": "post-cleanup",
+  "build_status": "pass|fail",
+  "new_test_status": "pass|fail",
+  "legacy_test_status": "removed|fail",
+  "allure_metadata_ok": true,
+  "editorconfig_ok": true,
+  "antipatterns_ok": true,
+  "parity_ok": true,
+  "parity_counts": {
+    "junit_cases_actual": 0,
+    "cucumber_cases_expected": 0,
+    "rows_dropped": 0
+  },
+  "duration_ms": 0,
+  "artifacts": [
+    "target/surefire-reports/TEST-<class>.xml",
+    "target/allure-results/<uuid>-result.json"
+  ],
+  "blockers": []
 }
 ```
 

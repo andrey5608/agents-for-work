@@ -53,6 +53,17 @@ Outline port plan: <path or N/A>
 | Step | Feature line | Kotlin method | File line |
 |------|--------------|----------------|-----------|
 
+## Parity counts (for results-verifier Gate 7)
+
+These numbers drive the Gate 7 parity check in `results-verifier` and the cleanup-step sanity check in `migrate-conductor`. They are a fact about the scenario, not a preference — fill them from the `.feature` and the approved port plan, do not tune them to match the test.
+
+- Expected Cucumber cases: `<1 for plain Scenario | total Examples rows for Outline>`
+- Expected JUnit cases: `<1 for plain Scenario | split_rows + merge_cases for Outline>`
+- Rows dropped: `<0 for plain Scenario | count of rows with disposition "drop" in port plan>`
+- Port plan path: `<path, or N/A for plain Scenario>`
+
+Sanity check (for Outline only): `Expected Cucumber cases == split_rows + merge_cases + dropped_rows`. If this does not hold, the port plan itself is inconsistent — fix the port plan before proceeding.
+
 ## Open questions for the user
 
 - <bullet list; empty if none>

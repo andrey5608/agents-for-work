@@ -20,6 +20,7 @@ This repository hosts autotests for a **backend-only** service. Test stack:
 7. **Migrations are one scenario at a time.** Never batch. For `Scenario Outline` / `Examples`, produce and await approval of a per-row port plan before any code. See `chatmodes/migrate-conductor.chatmode.md`.
 8. **Migration goes Draft → user approval → Final.** Short-circuit only when the user passes `--approved-concept=...` at invocation.
 9. **Self-learning writes are append-only and only after explicit user `y`.** Knowledge files live under `.github/copilot/knowledge/`.
+10. **Atomicity of agents.** Every agent has exactly one responsibility. Verifier gates (build, test execution, legacy baseline, scenario removal, Allure metadata, `.editorconfig`, anti-patterns, migration parity) are split across separate atomic chatmodes; `results-verifier` is a thin orchestrator that composes their partial reports. When adding new behavior, prefer a new atomic agent over bolting a second responsibility onto an existing one. The invariant: if a single agent needs the word "and" to describe what it does, consider whether it should be two.
 
 ## Available commands (prompts)
 
@@ -34,11 +35,26 @@ This repository hosts autotests for a **backend-only** service. Test stack:
 
 ## Available custom chat modes (agents)
 
+### Orchestrators / authors
+
 - `migrate-conductor` — orchestrates an interactive migration, owns the journal.
 - `migrate-conductor-auto` — autonomous variant with auto-approval policy + retry-with-fix loop; delegates to the same worker and verifier.
-- `migrate-worker` — produces the Kotlin test code.
-- `results-verifier` — build / test / Allure / editorconfig gate. Used by both the migration conductors (`source: migration`) and the authoring agent (`source: authored`).
+- `migrate-worker` — produces the Kotlin test code (`task: write-test`) and, after a green initial verify, deletes the migrated Cucumber scenario (`task: delete-scenario`).
 - `api-test-author` — authors new Kotlin + JUnit 5 API tests for a specified endpoint set, mirroring the target module's existing architectural scheme.
+
+### Verifier orchestrator
+
+- `results-verifier` — selects and composes the atomic verifiers below based on `source` × `phase`. Owns no gate logic itself.
+
+### Atomic verifiers (each single-responsibility)
+
+- `build-and-test-verifier` — builds the project and runs a specific JUnit 5 test; emits `build_status` + `new_test_status`.
+- `legacy-baseline-verifier` — runs the legacy Cucumber scenario and confirms the pre-migration baseline is green (migration + `phase: initial`).
+- `scenario-removal-verifier` — confirms a migrated Cucumber scenario has been deleted from its `.feature` and no longer runs (migration + `phase: post-cleanup`).
+- `allure-metadata-verifier` — checks `target/allure-results/*-result.json` for the required Allure labels on the new test.
+- `editorconfig-verifier` — checks a file's compliance with the nearest `.editorconfig`.
+- `anti-pattern-verifier` — static scan for `Thread.sleep`, UI libs, non-English strings, and (for migrated tests only) JUnit 5 parameterization.
+- `migration-parity-verifier` — counts cases in the new test file and compares them to the port plan's non-dropped-row count.
 
 ## Knowledge base layout
 

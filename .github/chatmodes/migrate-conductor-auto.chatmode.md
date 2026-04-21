@@ -21,7 +21,8 @@ Every autonomous run carries `Mode: autonomous` in the journal plus a full audit
 - `.editorconfig` honored on every write.
 - Allure annotations explicit.
 - **Scenario Outline port plan always requires human approval.** Auto-mode does not short-circuit this gate. After the plan is approved, the Draft gate itself can still be auto-approved if the other criteria hold.
-- Verifier gates are unchanged — build / new test / legacy parity / Allure metadata / editorconfig / anti-patterns.
+- Verifier gates are unchanged — build / new test / legacy parity / Allure metadata / editorconfig / anti-patterns / migration parity.
+- Cleanup step is inherited from the interactive conductor — after a green `phase: initial`, the autonomous conductor delegates `task: delete-scenario` to the worker and re-verifies with `phase: post-cleanup`. Both phases run through the same retry-with-fix loop and share the retry budget.
 
 ## Auto-approval policy
 
@@ -43,11 +44,11 @@ Any ✗ → log `fallback: <criterion-id>` and delegate to the interactive `migr
 
 ## Retry-with-fix loop
 
-Budget: **3 total retries** across all gates. Configurable via `--retry-budget=N`, `0 ≤ N ≤ 5`.
+Budget: **3 total retries** across all gates and across both verify phases combined. Configurable via `--retry-budget=N`, `0 ≤ N ≤ 5`. A retry spent on a `phase: initial` blocker counts against the same budget as one spent on a `phase: post-cleanup` blocker.
 
 ### Classifier
 
-On `blockers[]` from the verifier, classify each blocker into exactly one class:
+On `blockers[]` from the verifier, classify each blocker into exactly one class. Phase-specific classes apply only in the noted phase; everything else applies to both phases.
 
 | Class | Signal | Auto-fixable? | Scope |
 |-------|--------|---------------|-------|
@@ -57,50 +58,70 @@ On `blockers[]` from the verifier, classify each blocker into exactly one class:
 | `editorconfig` | Whitespace / indent / charset / EOL / final newline violation. | Yes | New test file only. |
 | `anti-pattern` | `Thread.sleep` / `@ParameterizedTest` / UI class / non-English string appeared. | Yes, if the replacement is mechanical (remove `Thread.sleep`, restructure a stray `@ParameterizedTest` into helper calls). Otherwise escalate. | New test file only. |
 | `test-assertion` | New test fails because assertion value differs from expected. | **Conditionally.** Auto-fix only when the mismatch is a clearly-wrong literal copied from the feature (e.g., a `@DisplayName` string used as an expected value). **Never** change an assertion to match an unexpected behavior — that's faking a green. Escalate. | New test file only. |
-| `legacy-red` | Gate 3 legacy parity fails — the legacy scenario was already broken pre-migration. | No | Escalate. Pre-existing baseline issue. |
+| `parity-mismatch` | Gate 7 reports `actual_junit_cases != expected_junit_cases`. | No. Parity failure means the worker collapsed / silently dropped rows or the port plan was misread. Escalate so the human can revise the port plan or the draft; **never** adjust the port plan counts to match the test. | Escalate. |
+| `legacy-red` (phase: initial) | Gate 3 reports the pre-migration Cucumber scenario is red. | No | Escalate. Pre-existing baseline issue. |
+| `cleanup-incomplete` (phase: post-cleanup) | Gate 3 reports the scenario still exists in the `.feature` or the Cucumber runner still executes it. | Yes — re-invoke `task: delete-scenario` with the same inputs and re-verify. If a second post-cleanup verify still reports the scenario present, escalate. | `.feature` file only, via worker's `task: delete-scenario`. |
+| `cleanup-overreach` (phase: post-cleanup) | Deletion report shows the worker removed more than the target scenario (e.g., `example_rows_removed` exceeds the port plan, or an unrelated tag appears in `tags_removed`). | No | Escalate. Ask the user to `git checkout -- <feature_path>` and retry interactively. |
 | `infra-error` | Testcontainers did not start, Maven repo unreachable, plugin crash, OOM. | No | Escalate. Environmental. |
 | `unknown` | Stack trace does not match any known class; no lesson match. | No | Escalate. |
 
 ### Loop
 
-```
-# Run the initial verify before any fix attempt.
-verifier.run()
-if verifier.all_gates_passed: mark green; done
+Two verify phases run in sequence: `initial` (right after the worker writes the test) and `post-cleanup` (after the scenario is removed from the `.feature`). Both share the retry budget.
 
-# Each iteration of the loop is a fix+reverify cycle.
-# attempt=1 means the first fix attempt; attempt=retry_budget means the last.
-attempt = 1
-while attempt <= retry_budget:
+```
+attempt = 0
+phase   = "initial"
+
+verifier.run(phase=phase)
+while True:
+    if verifier.all_gates_passed:
+        if phase == "initial":
+            # Scenario cleanup: delete the migrated Cucumber scenario.
+            worker.run(task="delete-scenario", ...)
+            phase = "post-cleanup"
+            verifier.run(phase=phase)
+            continue
+        else:  # phase == "post-cleanup"
+            mark green; done
+            break
+
+    if attempt >= retry_budget:
+        escalate with full retry-log
+        break
+
     blockers = verifier.report.blockers
-    classifications = [classify(b) for b in blockers]
+    classifications = [classify(b, phase) for b in blockers]
     if any non-auto-fixable: escalate; break
-    apply_scoped_fix(classifications)   # worker re-emit, touching only flagged files
-    record_retry(attempt, blockers, classifications, applied_fix)
-    verifier.run()
-    if verifier.all_gates_passed: mark green; break
+
+    apply_scoped_fix(classifications, phase)
+    #  phase=="initial"       → worker re-emits the test file
+    #  phase=="post-cleanup"  → worker re-runs task=delete-scenario with same inputs
     attempt += 1
-if not green:
-    escalate with full retry-log
+    record_retry(attempt, phase, blockers, classifications, applied_fix)
+    verifier.run(phase=phase)
 ```
 
-Each fix attempt is scoped — the worker is instructed to touch only the flagged file(s). The worker must not:
+Each fix attempt is scoped — the worker is instructed to touch only the flagged file(s) for that phase. The worker must not:
 
-- modify the `.feature` or the legacy runner,
 - broaden or weaken an assertion to make a red test green,
 - disable a verifier gate,
-- remove Allure annotations to avoid a metadata check.
+- remove Allure annotations to avoid a metadata check,
+- edit the `.feature` outside of `task: delete-scenario` (cleanup phase only),
+- touch step-definition classes, the Cucumber runner, or anything under `src/main/**`,
+- loosen the port plan to make Gate 7 parity pass.
 
-Any such violation surfaces as an anti-pattern on the next verify and triggers immediate escalation even within budget.
+Any such violation surfaces as an anti-pattern or parity mismatch on the next verify and triggers immediate escalation even within budget.
 
 ### Escalation
 
 On escalation:
 
-1. Write the journal with `Mode: autonomous → escalated` and the full retry-log.
+1. Write the journal with `Mode: autonomous → escalated` and the full retry-log. Include the phase at which the escalation happened (`initial` or `post-cleanup`).
 2. Leave the test file in its last emitted state (do not revert — the user may want to inspect).
-3. Surface to the user: final blocker list, retry-log, one-sentence diagnosis of why auto could not finish.
-4. Offer: `retry interactively? / open in worker for a manual fix? / abort and revert the emitted file?`
+3. If escalation happened during `phase: post-cleanup` AND the `.feature` has already been modified, surface that fact explicitly. Do **not** silently revert the `.feature` — ask the user to run `git checkout -- <feature_path>` if they want the scenario back.
+4. Surface to the user: final blocker list, retry-log, one-sentence diagnosis of why auto could not finish.
+5. Offer: `retry interactively? / open in worker for a manual fix? / abort and (optionally) revert the emitted file and the .feature edit?`
 
 ## Lessons-learned in autonomous mode
 

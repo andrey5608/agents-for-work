@@ -22,20 +22,36 @@ migrate-worker                                                      │
  │  Plain @Test, Allure annotations explicit, editorconfig honored  │
  └──────────────────────────────────────────────────────────────────┘
  ▼
-results-verifier
+results-verifier  (phase: initial)
  │  Gate 1  mvn -q verify
  │  Gate 2  mvn test -Dtest=<NewClass>#<method>  + parse surefire XML
- │  Gate 3  legacy Cucumber run for the same scenario + parse surefire XML
+ │  Gate 3  legacy Cucumber run for the same scenario + parse surefire XML  (baseline is green)
  │  Gate 4  Allure metadata present in target/allure-results/*.json
  │  Gate 5  .editorconfig compliance (editorconfig-checker or manual walk)
  │  Gate 6  anti-pattern scan (Thread.sleep, @ParameterizedTest, UI libs, non-English strings)
+ │  Gate 7  migration parity — junit_cases_actual == expected_junit_cases
  │  Report  JSON block with pass/fail per gate and a blockers[] array
  ▼
+migrate-worker  (task: delete-scenario)
+ │  Locates the scenario block by exact name, removes it and its scenario-level tags
+ │  Honors .editorconfig, collapses one trailing blank line at most
+ │  Never deletes the .feature file even if empty; never touches step defs / runner / src/main
+ │  Emits deletion report: { lines_removed, tags_removed, example_rows_removed,
+ │                           file_left_empty_of_scenarios, orphaned_step_definitions_candidates }
+ ▼
+results-verifier  (phase: post-cleanup)
+ │  Gate 1  mvn -q verify
+ │  Gate 2  mvn test -Dtest=<NewClass>#<method>  + parse surefire XML
+ │  Gate 3  grep feature_path for scenario name → 0 matches
+ │          + mvn test -Dtest=<runner> -Dcucumber.filter.name="<name>" → 0 scenarios run
+ │          (scenario confirmed removed; legacy_test_status: removed)
+ │  Gates 4-7  re-checked as in phase: initial
+ ▼
 migrate-conductor
- │  On green                                            On block
- │   write journal entry from _TEMPLATE.md               surface blockers[]
- │   prepend row in _INDEX.md                            offer revise / abort
- │   ask 3 independent y/n questions for lessons        record block in journal
+ │  On green (both phases)                               On block (either phase)
+ │   write journal entry from _TEMPLATE.md                surface blockers[]
+ │   prepend row in _INDEX.md                             offer revise / (post-cleanup) revert / abort
+ │   ask 3 independent y/n questions for lessons         record block in journal
  │   append only on "y"
 ```
 
@@ -146,7 +162,8 @@ Assign a GitHub issue titled `Migrate scenario "<name>" from <feature-path>` to 
 - Interactive conductor: `.github/chatmodes/migrate-conductor.chatmode.md`
 - Autonomous conductor: `.github/chatmodes/migrate-conductor-auto.chatmode.md`
 - Worker: `.github/chatmodes/migrate-worker.chatmode.md`
-- Verifier: `.github/chatmodes/results-verifier.chatmode.md`
+- Verifier orchestrator: `.github/chatmodes/results-verifier.chatmode.md`
+- Atomic verifiers: `.github/chatmodes/{build-and-test,legacy-baseline,scenario-removal,allure-metadata,editorconfig,anti-pattern,migration-parity}-verifier.chatmode.md`
 - Templates: `.github/copilot/templates/*.template.md` (including `auto-approval-checklist.template.md`)
 - Journal: `.github/copilot/journal/{_INDEX,_TEMPLATE}.md`
 - Knowledge: `.github/copilot/knowledge/**`

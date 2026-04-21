@@ -28,9 +28,10 @@ Migrate exactly one Cucumber scenario to Kotlin + JUnit 5.
 2. The conductor detects Scenario Outline / Examples and, if present, fills `scenario-outline-port-plan.template.md` and blocks for user approval before anything else.
 3. The conductor produces a Draft using `migration-draft.template.md` and, unless `--approved-concept` was provided, asks the user to approve it.
 4. The conductor hands off to `migrate-worker` to write the Kotlin test class.
-5. The conductor hands off to `results-verifier` to run build + new test + legacy test + Allure metadata + `.editorconfig` gates.
-6. On green: the conductor writes the migration journal, updates `_INDEX.md`, and asks (one question at a time) whether to append lessons.
-7. On block: the conductor surfaces the verifier's blocker list and offers to revise or abort.
+5. The conductor hands off to `results-verifier` with `phase: initial` to run build + new test + legacy test + Allure metadata + `.editorconfig` + anti-patterns + migration-parity gates.
+6. On green initial: the conductor hands off to `migrate-worker` again with `task: delete-scenario` to remove the migrated Cucumber scenario from the `.feature`, then re-runs `results-verifier` with `phase: post-cleanup`. Post-cleanup confirms the scenario is gone (grep returns zero matches, Cucumber runner reports zero tests) and parity still holds.
+7. On green post-cleanup: the conductor writes the migration journal, updates `_INDEX.md`, and asks (one question at a time) whether to append lessons.
+8. On block at either phase: the conductor surfaces the verifier's blocker list and offers to revise, revert the `.feature` edit (post-cleanup only), or abort.
 
 ## Invariants restated
 
