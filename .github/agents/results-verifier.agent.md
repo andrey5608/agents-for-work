@@ -88,7 +88,7 @@ No `legacy_*` atom, no parity atom.
 
 ## Execution order & short-circuit
 
-Run in the order above. If `build-and-test-verifier` reports `build_status: fail`, the orchestrator still runs `editorconfig-verifier` and `anti-pattern-verifier` (they work on source and don't need a successful build), but skips `allure-metadata-verifier` and parity (they depend on build artifacts or on a fully-written test file being trustworthy post-build). Record `skipped-due-to-upstream-failure` as a note, not a blocker, for any skipped atom.
+Run in the order above. If `build-and-test-verifier` reports `build_status: fail`, the orchestrator still runs `editorconfig-verifier`, `anti-pattern-verifier`, and `migration-parity-verifier` (they work from source inputs and do not require a successful build). It skips `allure-metadata-verifier` because that atom depends on build-generated test results/artifacts. Record `skipped-due-to-upstream-failure` as a note, not a blocker, for any skipped atom.
 
 ## Composition
 
