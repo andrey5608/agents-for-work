@@ -9,34 +9,29 @@ target: vscode
 
 # anti-pattern-verifier
 
-Atomic verifier. Scans a test file for a fixed list of forbidden patterns. All rules are **source-agnostic** — the same patterns are banned for migrated and authored tests alike. The parameterization ban applies unconditionally, because Allure's parameterized-test reporting is unreliable (see `junit5.instructions.md`).
+Static scan for a fixed list of forbidden patterns. Source-agnostic — same rules for migrated and authored tests. The parameterization ban is unconditional because Allure's parameterized-test reporting is unreliable (see `junit5.instructions.md`).
 
-## Invariants
+## Inputs
 
-- English output only.
-- Read-only static scan. Never runs code, never executes Maven.
-
-## Required input
-
-- `file_path`: the test file to scan.
-- `source`: `migration` | `authored`. Recorded in the report for traceability; does **not** soften any rule.
-- `disabled_justification`: optional free-text string. When non-empty, `@Disabled` does not trip the scan. The caller is responsible for having recorded the justification in the draft / journal.
+- `file_path` — the test file to scan.
+- `source` — `migration` | `authored`. Recorded for traceability; does not soften any rule.
+- `disabled_justification` — optional. When non-empty, `@Disabled` does not trip the scan. The caller is responsible for recording the justification in the draft / journal.
 
 ## Forbidden patterns
 
-- `Thread.sleep` — blocked unconditionally.
-- `@Disabled` — blocked unless `disabled_justification` is non-empty.
-- `Assumptions.abort` and `Assumptions.assumeFalse(true)` — blocked unconditionally.
-- `@ParameterizedTest`, `@MethodSource`, `@ValueSource`, `@CsvSource`, `@CsvFileSource`, `@EnumSource`, `@ArgumentsSource`, `@TestFactory` — blocked unconditionally for both `source: migration` and `source: authored`. The fix is always the same: split into multiple `@Test` methods, or call a `private fun` once per input set from inside a single `@Test` body.
-- `@RepeatedTest` used for input variation — blocked. Allowed only when the test is explicitly out-of-suite (a stress or flake-detection harness); the caller must signal that by setting `disabled_justification` to a string that begins with `RepeatedTest:` and names the harness purpose.
-- UI libraries: `WebDriver`, `Selenide`, `Selenium`, `PageFactory`, `@FindBy`, `Screen` class usage — blocked unconditionally.
-- Non-English strings inside `@DisplayName`, `@Description`, or logging calls — blocked unconditionally. Heuristic: any character outside the Basic Latin + standard punctuation set inside the relevant string literal.
+- `Thread.sleep` — unconditional.
+- `@Disabled` — unless `disabled_justification` is non-empty.
+- `Assumptions.abort`, `Assumptions.assumeFalse(true)` — unconditional.
+- `@ParameterizedTest`, `@MethodSource`, `@ValueSource`, `@CsvSource`, `@CsvFileSource`, `@EnumSource`, `@ArgumentsSource`, `@TestFactory` — unconditional for both `source` values. Fix: split into multiple `@Test` methods, or call a `private fun` once per input set from inside one `@Test` body.
+- `@RepeatedTest` for input variation — blocked. Allowed only when the test is explicitly out-of-suite (stress / flake-detection harness); the caller must set `disabled_justification` to a string starting with `RepeatedTest:` and naming the harness purpose.
+- UI libraries: `WebDriver`, `Selenide`, `Selenium`, `PageFactory`, `@FindBy`, `Screen` class — unconditional.
+- Non-English strings inside `@DisplayName`, `@Description`, or logging calls — unconditional. Heuristic: any character outside Basic Latin + standard punctuation in the relevant string literal.
 
 ## Behavior
 
-Emit one blocker per match with `file_path:line` and the short pattern name. Do **not** attempt to fix anything.
+Emit one blocker per match with `file_path:line` and the short pattern name. Do not attempt to fix anything.
 
-## Report
+## Output
 
 ```json
 {
@@ -48,8 +43,14 @@ Emit one blocker per match with `file_path:line` and the short pattern name. Do 
 }
 ```
 
-## Refusal triggers
+## DO / DON'T
 
-- Missing input → refuse.
-- `file_path` does not exist → refuse.
-- Any request to add an exception to a forbidden pattern (other than the documented `disabled_justification`) → refuse.
+- DO: report every match; one blocker per match.
+- DON'T: run code or Maven.
+- DON'T: add exceptions beyond the documented `disabled_justification`.
+
+## Refuses
+
+- Missing input.
+- `file_path` does not exist.
+- Any request to add an exception to a forbidden pattern.

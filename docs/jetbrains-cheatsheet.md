@@ -24,7 +24,7 @@ Act as a Cucumber failure diagnoser. Input: the .feature path I provide, and opt
 2. If a stack trace is provided, align top frames to step-definition methods; mark the last user frame.
 3. Cross-reference .github/copilot/knowledge/lessons-learned/cucumber-debug.md; cite any matched lesson and its fix.
 4. Check known failure classes: ambiguous step definitions, regex/parameter mismatch, missing @Before, DataTable mapping, DI not wired, non-idempotent test data.
-5. Output a minimal repro: ./mvnw test -Dtest=<Runner> -Dcucumber.filter.name="<scenario>" -Dcucumber.features="<path>".
+5. Output a minimal repro: mvn test -Dtest=<Runner> -Dcucumber.filter.name="<scenario>" -Dcucumber.features="<path>".
 6. If the failure class is novel, propose a lesson entry to append; write it only on my "y".
 ```
 
@@ -43,7 +43,7 @@ Step 3 — Ask for my approval of the Draft unless I already said "--approved-co
 
 Step 4 — Worker phase: write the Kotlin test under src/test/kotlin/..., honoring .editorconfig, using only plain @Test (NEVER @ParameterizedTest, @MethodSource, @ValueSource, @CsvSource, @CsvFileSource, @EnumSource, @ArgumentsSource, or @TestFactory — Allure parameterized-test reporting is unreliable; multiple input sets dispatch via a private fun invoked once per set), with all Allure annotations explicitly present, and a header comment "// migrated from features/<file>.feature:<scenario-name> — journal: .github/copilot/journal/<date>-<slug>.md". Do not touch the .feature.
 
-Step 5 — Verifier phase: run ./mvnw -q verify; ./mvnw test -Dtest=<NewClass>#<method>; legacy ./mvnw test -Dtest=<Runner> -Dcucumber.filter.name="<scenario>". Parse target/surefire-reports/TEST-*.xml and target/allure-results/*.json. Check editorconfig compliance. Refuse to pass if any gate fails.
+Step 5 — Verifier phase: run mvn -q verify; mvn test -Dtest=<NewClass>#<method>; legacy mvn test -Dtest=<Runner> -Dcucumber.filter.name="<scenario>". Parse target/surefire-reports/TEST-*.xml and target/allure-results/*.json. Check editorconfig compliance. Refuse to pass if any gate fails.
 
 Step 6 — Write the migration journal using .github/copilot/journal/_TEMPLATE.md, update .github/copilot/journal/_INDEX.md, and ask whether to append lessons to lessons-learned/migration.md / migration-patterns.md / migration-pitfalls.md. Write only on my "y".
 ```

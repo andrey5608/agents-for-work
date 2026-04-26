@@ -7,11 +7,12 @@
   // Agent mode itself.
   "chat.agent.enabled": true,
   "chat.agent.maxRequests": 100,
-
-  // MCP — discovery + auto-start so any MCP tools the user has configured globally
-  // are available to the default agent in this workspace too.
-  "chat.mcp.enabled": true,
-  "chat.mcp.discovery.enabled": true,
+  "chat.mcp.discovery.enabled": {
+    "claude-desktop": true,
+    "windsurf": true,
+    "cursor-global": true,
+    "cursor-workspace": true
+  },
 
   // Built-in agent tool families. Each one corresponds to a tool group exposed in
   // the VS Code Copilot tools picker; setting them to true makes them available
@@ -25,5 +26,6 @@
 
   // Keep the human in the loop for destructive actions — tools are enabled,
   // but the agent still prompts before running them.
-  "chat.tools.autoApprove": false
+  "chat.tools.autoApprove": false,
+  "chat.mcp.access": "all"
 }

@@ -6,33 +6,33 @@ allowed-tools: shell
 
 # /review
 
-Run a thorough review of the current changes.
+Review the current changes.
 
-## Scope
+## Usage
 
-- Default scope is the diff of the working tree and staged changes vs `origin/main` (or `main`).
-- If the user passes a ref, PR number, or path, review that instead.
+```
+/review
+/review <ref>
+/review <pr-number>
+/review <path>
+```
 
-## Process
+## Arguments
 
-1. Resolve the scope:
-   - If a PR number is provided, fetch its diff.
-   - Otherwise run `git diff --merge-base main -- .` to get the review surface. If `main` is unavailable locally, try `origin/main`.
-2. Read the full file contents of every changed file so findings have accurate line anchors.
+- Default: working tree + staged changes vs `origin/main` (or `main`).
+- `<ref>` / `<pr-number>` / `<path>` — explicit scope.
+
+## Behavior
+
+1. **Resolve scope.**
+   - PR number → fetch its diff.
+   - Otherwise `git diff --merge-base main -- .`. Fall back to `origin/main` if local `main` is unavailable.
+2. Read full contents of every changed file so anchors are accurate.
 3. Load `.github/instructions/review-rules.instructions.md` and the cross-referenced instructions (`kotlin`, `junit5`, `cucumber`, `allure`, `editorconfig-compliance`, `english-output`).
-4. Load `.github/copilot/knowledge/lessons-learned/review.md`. For each lesson, check whether its pattern matches anything in the current diff.
-5. Walk the diff file by file, applying the 10 rubrics. Attach each finding to `file:line`.
-6. Assign severity: `blocker` (must fix), `major` (should fix), `minor` (worth fixing), `nit` (opinion).
-7. Emit the report using `.github/copilot/templates/review-checklist.template.md` as a shape guide.
-
-## Output constraints
-
-- English only.
-- Findings grouped by rubric, sorted by severity within each rubric.
-- Every finding has `file:line`, a one-sentence description of the problem, and (when non-trivial) one sentence of suggested fix.
-- Cite any lesson-learned match as `see lessons-learned/review.md#<anchor>`.
-- Do not suggest refactors beyond the diff scope.
-- Do not produce code patches — this is a review, not an edit.
+4. Load `.github/copilot/knowledge/lessons-learned/review.md`. For each lesson, check whether its pattern matches anything in the diff.
+5. Walk the diff file by file, applying the 10 rubrics. Anchor every finding at `file:line`.
+6. Assign severity: `blocker` (must fix) | `major` (should fix) | `minor` (worth fixing) | `nit` (opinion).
+7. Emit the report using `.github/copilot/templates/review-checklist.template.md`.
 
 ## End of run
 
@@ -40,5 +40,17 @@ Ask once:
 
 > Record a new lesson from this review? (y / n)
 
-- On `y`: ask for the lesson title and append an entry to `.github/copilot/knowledge/lessons-learned/review.md` using the format in `docs/self-learning.md`.
-- On `n` or no answer: stop without writing.
+`y` → ask for the lesson title, append to `lessons-learned/review.md` per `docs/self-learning.md`. `n` or no answer → stop.
+
+## DO / DON'T
+
+- DO: English only.
+- DO: group findings by rubric, sort by severity within each rubric.
+- DO: cite lesson matches as `see lessons-learned/review.md#<anchor>`.
+- DON'T: suggest refactors beyond the diff scope.
+- DON'T: produce code patches — review, not edit.
+
+## Refuses
+
+- Request to merge or push from this command — out of scope.
+- Request to skip a rubric.

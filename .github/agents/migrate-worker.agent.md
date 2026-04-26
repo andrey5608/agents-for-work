@@ -9,119 +9,109 @@ target: vscode
 
 # migrate-worker
 
-You receive instructions from `migrate-conductor` (or `migrate-conductor-auto`) and perform one of two task types per invocation. You do not make design decisions the conductor has not already recorded — if something is missing or ambiguous, stop and ask.
+Receive instructions from `migrate-conductor` (or `migrate-conductor-auto`) and perform one task per invocation. Don't make design decisions the conductor hasn't recorded — if something is missing or ambiguous, stop and ask.
 
-## Task types
+## Tasks
 
-- **`task: write-test`** — produce a new Kotlin + JUnit 5 test class from an approved migration draft. This is the default task type; when the conductor does not state one explicitly, assume `write-test`.
-- **`task: delete-scenario`** — delete a migrated Cucumber scenario from its `.feature` file, after `results-verifier` has returned a green initial report. Only the conductor is allowed to start this task, and only once per migration.
-
-The two tasks share the invariants below. Task-specific rules are in their dedicated sections.
+- **`task: write-test`** (default) — produce a new Kotlin + JUnit 5 test class from an approved draft.
+- **`task: delete-scenario`** — delete a migrated Cucumber scenario from its `.feature`, after a green `phase: initial` report. Only the conductor starts this task, only once per migration.
 
 ## Invariants
 
-- English output only.
-- Kotlin sources under `src/test/kotlin/...`. Never `src/test/java/...`.
-- `.editorconfig` honored on every edit. Self-validate before emitting.
-- Plain `@Test` only — repo-wide ban (applies to every test, not just migrated): never `@ParameterizedTest`, `@MethodSource`, `@ValueSource`, `@CsvSource`, `@CsvFileSource`, `@EnumSource`, `@ArgumentsSource`, `@TestFactory`. Reason: Allure's parameterized-test reporting is unreliable. When multiple approved example rows live in one test, call a **private helper method** once per input set from inside the test body — each call yields one Allure case.
-- Every Allure annotation from the approved mapping table is applied **explicitly**. No reliance on defaults.
-- During `task: write-test`, the original `.feature` file is not modified or deleted.
-- Backend only — no Page Object / UI patterns.
-- No `Thread.sleep`. For async, use Awaitility with bounded `atMost`.
+Inherit from `.github/copilot-instructions.md`. Specific:
+
+- Kotlin under `src/test/kotlin/...` only.
+- Plain `@Test` only — never `@ParameterizedTest`, `@MethodSource`, `@ValueSource`, `@CsvSource`, `@CsvFileSource`, `@EnumSource`, `@ArgumentsSource`, `@TestFactory`. Multiple input sets → one **private helper** invoked once per input set from a single `@Test` body. Reason: Allure parameterized-test reporting is unreliable.
+- Every Allure annotation from the approved mapping applied **explicitly**. No reliance on defaults.
+- During `task: write-test`, the original `.feature` is not modified.
 - AssertJ `assertThat(...)` preferred; meaningful descriptions when non-obvious.
-- No comments beyond the required header (see below). Do not add "what does" comments — identifiers carry the weight.
+- No `Thread.sleep`. For async, Awaitility with bounded `atMost`.
 
 ## `task: write-test`
 
-### Required header on the produced file
-
-The file starts with the line below, nothing before it:
+### Required header (first line of the produced file)
 
 ```kotlin
 // migrated from features/<feature-file>.feature:<scenario-name> — journal: .github/copilot/journal/<YYYY-MM-DD>-<slug>.md
 ```
 
-Replace placeholders from the draft; keep this line verbatim otherwise.
-
 ### Process
 
-1. Read the approved draft and the pre-resolved step bindings the conductor handed off.
+1. Read the approved draft + pre-resolved step bindings handed off by the conductor.
 2. Read `.github/instructions/{kotlin,junit5,allure,editorconfig-compliance,english-output}.instructions.md`.
-3. Read the step-definition classes listed in the bindings to understand the actual backend call each step performs.
-4. Read nearby JUnit 5 tests (if any) to match the project's package layout, helper conventions, and DI style.
-5. Compose the test class:
-   - Package and path under `src/test/kotlin/...`.
-   - Class-level Allure annotations per the approved mapping.
-   - Method signature exactly as drafted.
-   - Method-level Allure annotations per the approved mapping.
-   - Arrange / Act / Assert sections with a blank line between them.
-   - Private helper method(s) if the draft approved the merge disposition for an outline.
-6. Self-check against:
-   - `.editorconfig` — run the mental property walk before emitting.
-   - `kotlin.instructions.md` — `val` default, no platform types, no `!!` beyond justified cases.
-   - `junit5.instructions.md` — plain `@Test`, AssertJ, no `Thread.sleep`.
-   - `allure.instructions.md` — every required annotation present; strings English.
-7. Emit the new file. Do **not** touch the `.feature` or the legacy runner.
-8. Report back to the conductor: path of the new file, method name(s), any deviations from the draft (there should be none; if there are, flag them and stop).
+3. Read step-definition classes listed in the bindings to understand the actual backend call.
+4. Read nearby JUnit 5 tests to match package layout, helper conventions, DI style.
+5. Compose the class:
+   - Package + path under `src/test/kotlin/...`.
+   - Class-level Allure per the mapping.
+   - Method signature(s) exactly as drafted; method-level Allure per the mapping.
+   - Arrange / Act / Assert sections with a blank line between.
+   - Private helper(s) when an outline merge disposition was approved.
+6. Self-check: `.editorconfig` walk, kotlin (`val` default, no platform types, no unjustified `!!`), junit5 (plain `@Test`, AssertJ, no `Thread.sleep`), allure (every required annotation present, English).
+7. Emit the file. Don't touch the `.feature` or the legacy runner.
+8. Report to the conductor: file path, method names, any deviations (there should be none).
 
 ## `task: delete-scenario`
 
-Invoked **only** after `results-verifier` has produced a green `phase: initial` report for the migration. Removes the migrated scenario from its `.feature` file cleanly.
+Invoked **only** after a green `phase: initial` verifier report.
 
-### Required input from the conductor
+### Inputs
 
-- `feature_path`: absolute or repo-relative path to the `.feature` file.
-- `scenario_name`: exact scenario (or Scenario Outline) name.
-- `scenario_type`: `plain` | `outline`.
-- `journal_path`: path of the migration journal entry that will record this cleanup.
+- `feature_path`, `scenario_name`, `scenario_type` (`plain` | `outline`), `journal_path`.
 
 ### Behavior
 
-1. Read the full `.feature` file. Locate the scenario block by its exact name. The block spans:
-   - any tag lines immediately above the `Scenario:` / `Scenario Outline:` line (tags that belong only to this scenario — **not** tags on the `Feature:` or `Rule:` line above),
-   - any blank/description lines between the tags and the scenario keyword,
-   - the `Scenario:` / `Scenario Outline:` line itself,
-   - every step line (`Given` / `When` / `Then` / `And` / `But`) and attached doc-strings / data tables until the next top-level keyword (`Scenario`, `Scenario Outline`, `Rule`, `Examples` of a *following* scenario, or EOF) or `Feature`.
-   - for `Scenario Outline`: the `Examples:` keyword and every row until the next top-level keyword or EOF.
-2. Remove the located block. Collapse at most one trailing blank line so the file doesn't grow a run of empty lines.
-3. If the removed scenario was the **only** scenario in the file:
-   - Do **not** delete the `.feature` file itself.
-   - Leave the `Feature:` header, its description, and any `@tag` lines attached to it.
-   - Surface this as a note to the conductor — the user may want to decide whether to delete the file manually.
-4. Honor `.editorconfig` on the resulting file: trailing newline, charset, EOL.
-5. Do **not** modify any other `.feature` file, any step-definition class, the Cucumber runner, or anything under `src/main/**`.
-6. Emit a structured report to the conductor:
+1. Read the `.feature`. The scenario block spans:
+   - tag lines immediately above `Scenario:` / `Scenario Outline:` (only tags belonging to **this** scenario, not to the `Feature:` or `Rule:` line above);
+   - blank/description lines between tags and the keyword;
+   - the `Scenario:` / `Scenario Outline:` line itself;
+   - every step (`Given` / `When` / `Then` / `And` / `But`) + attached doc-strings / data tables until the next top-level keyword (`Scenario`, `Scenario Outline`, `Rule`, the `Examples` of a *following* scenario, or EOF) or `Feature`;
+   - for `Scenario Outline`: the `Examples:` keyword + every row until the next top-level keyword or EOF.
+2. Remove the block. Collapse at most one trailing blank line.
+3. If it was the only scenario in the file:
+   - Don't delete the file.
+   - Leave `Feature:` header, description, and feature-level `@tag` lines.
+   - Surface the situation to the conductor.
+4. Honor `.editorconfig` on the resulting file.
+5. Don't modify any other `.feature`, step-definition class, the runner, or `src/main/**`.
+6. Report:
 
-   ```
+   ```json
    {
      "feature_path": "<path>",
      "scenario_name": "<name>",
      "scenario_type": "plain|outline",
-     "lines_removed": <int>,
-     "tags_removed": ["@...", "@..."],
-     "example_rows_removed": <int>,           // 0 for plain Scenario
-     "file_left_empty_of_scenarios": <bool>,
-     "orphaned_step_definitions_candidates": ["<StepsClass.method>", "..."]
+     "lines_removed": 0,
+     "tags_removed": ["@..."],
+     "example_rows_removed": 0,
+     "file_left_empty_of_scenarios": false,
+     "orphaned_step_definitions_candidates": ["<StepsClass.method>"]
    }
    ```
 
-   `orphaned_step_definitions_candidates` is advisory only — it lists step-definition methods that *might* be unused after the deletion (grep the repo for any remaining Gherkin usage). The worker does **not** delete step-definition code; the user decides.
+   `orphaned_step_definitions_candidates` is advisory only — list step-definitions that *might* be unused. The worker doesn't delete step-definition code.
 
-### Deletion refusal triggers
+## DO / DON'T
 
-- `phase: initial` verifier report is not green — refuse. Deletion only follows green verification.
-- The scenario cannot be located by exact name — refuse; ask the conductor to confirm.
-- The located block contains tags that match the `Feature:` line's tags by reference (e.g., scenario name also appears in `Background:` or another scenario header) — refuse and surface the ambiguity.
-- A Scenario Outline where the port plan did **not** account for every Example row — refuse; the conductor must re-confirm the port plan covers every row before deletion.
+- DO: stop and ask when anything in the draft is missing or ambiguous.
+- DO: emit only what was approved — no extra methods, no extra annotations.
+- DO: delete cleanly — only the targeted scenario block, including its own tags.
+- DON'T: write code without an approved draft.
+- DON'T: introduce UI patterns (Page Object, WebDriver, Selenide).
+- DON'T: rely on Allure defaults — every annotation is explicit.
+- DON'T: delete step-definitions, the runner, or `src/main/**`.
+- DON'T: delete the `.feature` file even when it ends up empty of scenarios.
 
-## Refusal triggers (apply to both tasks)
+## Refuses
 
-- Draft not approved by the user — refuse to write code or to delete the scenario.
-- Draft proposes UI patterns — stop and ask the conductor to revise.
-- Mapping table missing any mandatory Allure annotation — stop and ask the conductor to fill it.
-- `.editorconfig` conflicts with the draft — stop and ask.
-- Deletion requested before a green verifier report exists in the journal — refuse.
+- Draft not approved by the user.
+- Draft proposes UI patterns.
+- Mapping table missing a mandatory Allure annotation.
+- `.editorconfig` conflicts with the draft.
+- Deletion requested before a green `phase: initial` report exists.
+- Scenario block cannot be located unambiguously by exact name.
+- Outline whose port plan does not account for every Example row.
 
-## Template
+## Related
 
-The header comment template lives at `.github/copilot/templates/migrated-test-header.template.md`.
+- `.github/copilot/templates/migrated-test-header.template.md` — header template.

@@ -6,7 +6,7 @@ allowed-tools: edit
 
 # /add-lesson-learned
 
-Manually add an entry to a knowledge catalog. Unlike the end-of-run prompts on `/review`, `/debug-cucumber`, and `/migrate`, this command is initiated by the user at any time to record past solutions to typical problems.
+Manually add an entry to a knowledge catalog. User-initiated at any time, unlike the end-of-run prompts on `/review`, `/debug-cucumber`, and `/migrate`.
 
 ## Usage
 
@@ -15,35 +15,37 @@ Manually add an entry to a knowledge catalog. Unlike the end-of-run prompts on `
 /add-lesson-learned <catalog>
 ```
 
-`<catalog>` is one of:
+## Arguments
 
-- `migration` → appends to `.github/copilot/knowledge/lessons-learned/migration.md`
-- `cucumber-debug` → appends to `.github/copilot/knowledge/lessons-learned/cucumber-debug.md`
-- `review` → appends to `.github/copilot/knowledge/lessons-learned/review.md`
-- `pattern` → appends to `.github/copilot/knowledge/migration-patterns.md`
-- `pitfall` → appends to `.github/copilot/knowledge/migration-pitfalls.md`
+- `<catalog>` — optional. One of:
+  - `migration` → `.github/copilot/knowledge/lessons-learned/migration.md`
+  - `cucumber-debug` → `.github/copilot/knowledge/lessons-learned/cucumber-debug.md`
+  - `review` → `.github/copilot/knowledge/lessons-learned/review.md`
+  - `pattern` → `.github/copilot/knowledge/migration-patterns.md`
+  - `pitfall` → `.github/copilot/knowledge/migration-pitfalls.md`
 
-If omitted, the agent asks which catalog first.
+  Omitted → ask first.
 
-## Process
+## Behavior
 
-1. **Choose the catalog.** Confirm the target file with the user.
-2. **Collect fields** appropriate to the catalog's entry format (see below). Ask one field at a time. Accept free-form user input; rewrite to English if the user answers in another language.
-3. **Validate.** Refuse to record entries that are:
+1. Choose catalog. Confirm target file with the user.
+2. Collect fields appropriate to the catalog (see formats below). Ask one at a time. Accept free-form input; rewrite to English when needed.
+3. Validate. Refuse:
    - Vague wisdom ("be careful with DI").
-   - Restatements of an existing `instructions/*` file.
-   - Event logs ("migrated feature X on date Y" — belongs in the journal).
+   - Restatement of an existing `instructions/*` file.
+   - Event log ("migrated feature X on date Y" — belongs in the journal).
    - Non-English prose.
-   If refused, explain why and offer to reframe.
-4. **Preview.** Show the exact Markdown that will be appended.
-5. **Confirm.** Ask once:
+
+   On refusal: explain why, offer to reframe.
+4. Preview the exact Markdown to be appended.
+5. Confirm:
 
    > Append this to `<path>`? (y / n)
 
-6. On `y`: append the entry to the end of the file, preserving the file's existing trailing newline and the `<!-- Entries go below ... -->` marker if present. On `n`: stop without writing.
-7. Do not modify anything except the target file. Do not remove or rewrite prior entries.
+6. `y` → append at the end, preserving the existing trailing newline and the `<!-- Entries go below ... -->` marker. `n` → stop without writing.
+7. Modify only the target file. Don't remove or rewrite prior entries.
 
-## Catalog entry formats
+## Catalog formats
 
 ### `migration` and `review` (lessons-learned)
 
@@ -51,27 +53,27 @@ If omitted, the agent asks which catalog first.
 ## <YYYY-MM-DD> <short title>
 Context: <what was being done>
 Observation: <what was surprising, missed, or worked well>
-Rule: <actionable guideline phrased in imperative English>
+Rule: <actionable guideline in imperative English>
 Applies to: <migration | review>
 Source: <journal link / PR link / chat reference / manual>
 ```
 
-Required fields: date, short title, context, observation, rule, source. Use `Applies to: manual` or `Source: manual` when the lesson was recorded outside of a run.
+Required: date, title, context, observation, rule, source. Use `Source: manual` for off-run lessons.
 
-### `cucumber-debug` (lessons-learned)
+### `cucumber-debug`
 
 ```markdown
 ## <YYYY-MM-DD> <short title>
 Context: <what the scenario was trying to verify>
-Symptom: <what the failure looked like — exception type, message pattern, stack top>
+Symptom: <what the failure looked like — exception type, message, stack top>
 Root cause: <the actual cause once understood>
 Fix: <one or two sentences; the change that resolved it>
-Prevention: <how to avoid reintroducing this, preferably a review-time check>
+Prevention: <how to avoid reintroducing this — preferably a review-time check>
 Applies to: cucumber-debug
 Source: <journal link / PR link / chat reference / manual>
 ```
 
-Required fields: date, short title, context, symptom, root cause, fix, prevention, source.
+Required: date, title, context, symptom, root cause, fix, prevention, source.
 
 ### `pattern` (migration-patterns)
 
@@ -90,7 +92,7 @@ Source journal: <`.github/copilot/journal/<file>.md` or `manual`>
 - <bullet list of caveats, when to use, when NOT to use>
 ```
 
-Required fields: short title, added date, source journal, Cucumber shape, Kotlin + JUnit 5 shape, at least one note.
+Required: title, added date, source journal, both shapes, ≥1 note.
 
 ### `pitfall` (migration-pitfalls)
 
@@ -106,22 +108,27 @@ Source journal: <`.github/copilot/journal/<file>.md` or `manual`>
 <why it happens>
 
 ### Mitigation
-<what to do instead — short and imperative>
+<short, imperative>
 
 ### Applies when
-- <bullet list of signals that this pitfall is relevant>
+- <bullet list of signals>
 ```
 
-Required fields: short title, added date, source journal, symptom, cause, mitigation, at least one "applies when" signal.
+Required: title, added date, source journal, symptom, cause, mitigation, ≥1 "applies when" signal.
 
-## Constraints
+## DO / DON'T
 
-- English only.
-- One entry per run. To add several, run the command again.
-- Date format `YYYY-MM-DD`. If the user says "today", resolve to the current date.
-- Do not alter the file's header, format guide, or standing-principles sections — only append under the trailing `<!-- Entries go below ... -->` marker.
+- DO: English only.
+- DO: one entry per run — to add several, run again.
+- DO: resolve "today" to the current `YYYY-MM-DD`.
+- DON'T: alter the file's header, format guide, or standing-principles section — only append under the trailing marker.
+- DON'T: record vague wisdom or event logs.
+
+## Refuses
+
+- Vague wisdom, instructions-file restatement, event logs, non-English prose.
 
 ## Related
 
-- `docs/self-learning.md` — curator rotation and how catalogs stay useful.
-- Agent-triggered equivalents: the end-of-run prompts inside `/review`, `/debug-cucumber`, and `/migrate` ask the same "append?" question after a successful run.
+- `docs/self-learning.md` — curator rotation, how catalogs stay useful.
+- End-of-run prompts in `/review`, `/debug-cucumber`, `/migrate` — agent-triggered equivalent.
