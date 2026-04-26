@@ -1,41 +1,37 @@
 ---
 name: anti-pattern-verifier
-description: Atomic verifier — static scan of a newly-authored test file for forbidden patterns (Thread.sleep, UI libs, non-English strings, and — for migrated tests — JUnit 5 parameterization).
+description: Atomic verifier — static scan of a newly-authored test file for forbidden patterns (Thread.sleep, UI libs, non-English strings, JUnit 5 parameterization).
 tools: ['search/codebase']
 user-invocable: false
-model: ['GPT-5.4 (high reasoning)', 'GPT-5.2-Codex', 'Claude Opus 4.7', 'Claude Sonnet 4.6']
+model: ['Claude Sonnet 4.6', 'GPT-5.4 (high reasoning)', 'Claude Opus 4.7', 'GPT-5.2-Codex']
 target: vscode
 ---
 
 # anti-pattern-verifier
 
-Atomic verifier. Scans a test file for a fixed list of forbidden patterns. The parameterization rule is **caller-aware**: it fires only for migrated tests, since authored tests are allowed to use JUnit 5 parameterization.
+Static scan for a fixed list of forbidden patterns. Source-agnostic — same rules for migrated and authored tests. The parameterization ban is unconditional because Allure's parameterized-test reporting is unreliable (see `junit5.instructions.md`).
 
-## Invariants
+## Inputs
 
-- English output only.
-- Read-only static scan. Never runs code, never executes Maven.
-
-## Required input
-
-- `file_path`: the test file to scan.
-- `source`: `migration` | `authored`. Controls the parameterization sub-rule.
-- `disabled_justification`: optional free-text string. When non-empty, `@Disabled` does not trip the scan. The caller is responsible for having recorded the justification in the draft / journal.
+- `file_path` — the test file to scan.
+- `source` — `migration` | `authored`. Recorded for traceability; does not soften any rule.
+- `disabled_justification` — optional. When non-empty, `@Disabled` does not trip the scan. The caller is responsible for recording the justification in the draft / journal.
 
 ## Forbidden patterns
 
-- `Thread.sleep` — blocked unconditionally.
-- `@Disabled` — blocked unless `disabled_justification` is non-empty.
-- `Assumptions.abort` and `Assumptions.assumeFalse(true)` — blocked unconditionally.
-- `@ParameterizedTest`, `@MethodSource`, `@ValueSource`, `@CsvSource`, `@EnumSource`, `@TestFactory` — blocked **only when `source: migration`**. Authored tests may use these freely.
-- UI libraries: `WebDriver`, `Selenide`, `Selenium`, `PageFactory`, `@FindBy`, `Screen` class usage — blocked unconditionally.
-- Non-English strings inside `@DisplayName`, `@Description`, or logging calls — blocked unconditionally. Heuristic: any character outside the Basic Latin + standard punctuation set inside the relevant string literal.
+- `Thread.sleep` — unconditional.
+- `@Disabled` — unless `disabled_justification` is non-empty.
+- `Assumptions.abort`, `Assumptions.assumeFalse(true)` — unconditional.
+- `@ParameterizedTest`, `@MethodSource`, `@ValueSource`, `@CsvSource`, `@CsvFileSource`, `@EnumSource`, `@ArgumentsSource`, `@TestFactory` — unconditional for both `source` values. Fix: split into multiple `@Test` methods, or call a `private fun` once per input set from inside one `@Test` body.
+- `@RepeatedTest` for input variation — blocked. Allowed only when the test is explicitly out-of-suite (stress / flake-detection harness); the caller must set `disabled_justification` to a string starting with `RepeatedTest:` and naming the harness purpose.
+- UI libraries: `WebDriver`, `Selenide`, `Selenium`, `PageFactory`, `@FindBy`, `Screen` class — unconditional.
+- Non-English strings inside `@DisplayName`, `@Description`, or logging calls — unconditional. Heuristic: any character outside Basic Latin + standard punctuation in the relevant string literal.
 
 ## Behavior
 
-Emit one blocker per match with `file_path:line` and the short pattern name. Do **not** attempt to fix anything.
+Emit one blocker per match with `file_path:line` and the short pattern name. Do not attempt to fix anything.
 
-## Report
+## Output
 
 ```json
 {
@@ -47,8 +43,14 @@ Emit one blocker per match with `file_path:line` and the short pattern name. Do 
 }
 ```
 
-## Refusal triggers
+## DO / DON'T
 
-- Missing input → refuse.
-- `file_path` does not exist → refuse.
-- Any request to add an exception to a forbidden pattern (other than the documented `disabled_justification`) → refuse.
+- DO: report every match; one blocker per match.
+- DON'T: run code or Maven.
+- DON'T: add exceptions beyond the documented `disabled_justification`.
+
+## Refuses
+
+- Missing input.
+- `file_path` does not exist.
+- Any request to add an exception to a forbidden pattern.

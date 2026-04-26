@@ -18,7 +18,7 @@ Review is scoped to the diff under review. Every finding is severity-tagged (`bl
 
 - Every test has `@DisplayName` — `minor`.
 - No JUnit 4 artifacts (`@RunWith`, `expected=`, `@Rule`, `@Ignore`) — `blocker`.
-- No `@ParameterizedTest`, `@MethodSource`, or Test-Matrix constructs introduced by new migrated code — `blocker` (parameterize inside the method body via private helper calls).
+- No `@ParameterizedTest`, `@MethodSource`, `@ValueSource`, `@CsvSource`, `@CsvFileSource`, `@EnumSource`, `@ArgumentsSource`, or `@TestFactory` introduced by **any** new test code (migrated or authored) — `blocker` (dispatch multiple input sets via a `private fun` invoked once per set from the `@Test` body; reason: Allure's parameterized-test reporting is unreliable).
 - `@Nested` used for grouping when a class spans multiple scenarios — `minor`.
 - `@Disabled` only with a journal reference — `major`.
 

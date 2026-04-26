@@ -7,27 +7,34 @@ description: Explain a JUnit 5 Kotlin test (`.kt`) or a Cucumber scenario (`.fea
 
 Explain the test at the path provided by the user.
 
-## Input
+## Usage
 
-- A path to a Kotlin JUnit 5 test file (`.kt`), optionally with `#<methodName>` to pin one method.
-- OR a path to a Cucumber feature file (`.feature`), optionally with `:<scenarioName>` to pin one scenario.
+```
+/explain-test <path-to-kt>[#<methodName>]
+/explain-test <path-to-feature>[:<scenarioName>]
+```
 
-## Process
+## Arguments
+
+- A path to a Kotlin JUnit 5 test (`.kt`), optionally `#<methodName>` to pin one method, OR
+- a Cucumber feature (`.feature`), optionally `:<scenarioName>` to pin one scenario.
+
+## Behavior
 
 1. Read the full target file.
-2. For JUnit 5:
+2. **JUnit 5**:
    - Identify every `@Test` method (or just the pinned one).
-   - Resolve every helper call and every `@Step`-annotated wrapper invoked from the test body.
-   - Read relevant helpers to understand the actual behavior exercised.
+   - Resolve every helper call and every `@Step` wrapper invoked from the test body.
+   - Read relevant helpers to understand the actual behavior.
    - List Allure annotations present (`@Epic`, `@Feature`, `@Story`, `@Severity`, `@DisplayName`, `@Description`, `@Link`, `@Issue`, `@TmsLink`, `@Step`, `@Tag`).
-3. For Cucumber:
+3. **Cucumber**:
    - Parse every step in the scenario.
-   - Grep step-definition classes under `**/steps/**/*.kt` for `@Given`, `@When`, `@Then`, `@And`, `@But` matching the step text.
-   - Build a `step:line → StepsClass.method:line` mapping. Mark unbound steps `UNBOUND STEP` — do not fabricate.
-   - List scenario tags and the feature-level `Feature:` / `Rule:` lines.
-4. Output the structured explanation below.
+   - Grep step-definition classes under `**/steps/**/*.kt` for `@Given`/`@When`/`@Then`/`@And`/`@But`.
+   - Build `step:line → StepsClass.method:line`. Mark unbound steps `UNBOUND STEP` — never fabricate.
+   - List scenario tags + the feature-level `Feature:` / `Rule:` lines.
+4. Emit the structured explanation.
 
-## Output shape (English only)
+## Output shape
 
 ```markdown
 # Explanation: <path>[:<methodOrScenario>]
@@ -36,19 +43,19 @@ Explain the test at the path provided by the user.
 <one paragraph — what behavior is verified and why it matters>
 
 ## Preconditions
-- <bullet list of inputs, fixtures, state required>
+- <inputs, fixtures, state required>
 
 ## Actions
-- <ordered bullet list of what the test does>
+- <ordered list of what the test does>
 
 ## Assertions
-- <bullet list of what must be true at the end, including implicit ones>
+- <what must be true at the end, including implicit assertions>
 
 ## Bugs it catches
-- <bullet list of regressions the test would flag>
+- <regressions the test would flag>
 
 ## Limitations (what it does NOT catch)
-- <bullet list of related behaviors outside this test's scope>
+- <related behaviors outside this test's scope>
 
 ## Allure metadata
 - Epic: ...
@@ -64,12 +71,11 @@ Explain the test at the path provided by the user.
 
 | Step | Feature line | Method | File line |
 |------|--------------|--------|-----------|
-|      |              |        |           |
 ```
 
-## Constraints
+## DO / DON'T
 
-- English only, regardless of prompt language.
-- Do not paraphrase the code when a precise verb describes it better (e.g., `POSTs to /users` rather than `sends a request`).
-- Do not invent assertions or step bindings. If unsure, say so.
-- Do not modify any files.
+- DO: English only.
+- DO: prefer precise verbs over paraphrase (`POSTs to /users`, not `sends a request`).
+- DON'T: invent assertions or step bindings — say "unsure" if it isn't clear.
+- DON'T: modify any file.

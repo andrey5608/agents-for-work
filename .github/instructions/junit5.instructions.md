@@ -10,8 +10,26 @@ applyTo: "**/src/test/kotlin/**/*.kt"
 - `@DisplayName("…")` on every test class and test method — English, describes the behavior under test, not the implementation.
 - `@Nested` for logical grouping inside a single test class.
 - `@BeforeEach` / `@AfterEach` for per-test setup and teardown. `@BeforeAll` / `@AfterAll` only for expensive, immutable shared state.
-- Do **not** use `@ParameterizedTest`, `@MethodSource`, `@ValueSource`, `@CsvSource`, `@EnumSource`, or any Test-Matrix construct for migrated tests. Parameterization belongs inside the test body as private helper invocations.
 - No JUnit 4 artifacts: no `@RunWith`, no `expected=`, no `@Rule`, no `@Ignore`. `@Disabled` is permitted only when the reason is recorded in the migration journal.
+
+## Parameterization — DON'Ts and DOs
+
+Plain `@Test` only. The ban applies to **every** test in this repo — migrated, authored, new, or refactored. Reason: Allure's parameterized-test reporting is unreliable. Per-iteration steps, attachments, and Epic/Feature/Story labels merge or duplicate across iterations, and per-row history breaks. Plain `@Test` methods keep one Allure node per case, with stable history, intact attachments, and predictable labels.
+
+### DON'Ts (verifier-enforced — `anti-pattern-verifier` blocks unconditionally)
+
+- **DON'T** use `@ParameterizedTest`.
+- **DON'T** use `@MethodSource`, `@ValueSource`, `@CsvSource`, `@CsvFileSource`, `@EnumSource`, `@ArgumentsSource`.
+- **DON'T** use `@TestFactory` / dynamic tests as a Test-Matrix workaround.
+- **DON'T** use `@RepeatedTest` for input variation (allowed only for stress / flake-detection runs outside the regular suite).
+- **DON'T** loop inside one `@Test` to assert multiple input sets — that hides per-case results from Allure too.
+- **DON'T** wrap a single helper call in a `forEach` over a list of inputs from inside a `@Test` body — the per-call Allure step nesting still collapses.
+
+### DOs
+
+- **DO** write one `@Test` per behavior/input set, with its own Allure annotations.
+- **DO** extract a `private fun runFor<Case>(inputs…)` that performs Arrange / Act / Assert for one input set. Call it **once per input set** from the `@Test` body when input sets are meaningfully grouped (e.g., merged Cucumber `Examples` rows). Each call still represents one logical case to the reader; the gain is removing test-code duplication, not collapsing Allure cases.
+- **DO** name each `@Test` after its case (`returns404ForUnknownUserId`, not `getUserScenarios`).
 
 ## Assertions
 

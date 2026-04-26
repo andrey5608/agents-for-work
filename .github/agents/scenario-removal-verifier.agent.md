@@ -3,47 +3,36 @@ name: scenario-removal-verifier
 description: Atomic verifier — confirms a migrated Cucumber scenario has been deleted from its .feature and no longer runs through the Cucumber runner.
 tools: ['run/terminal', 'read/terminalLastCommand', 'search/codebase']
 user-invocable: false
-model: ['GPT-5.4 (high reasoning)', 'GPT-5.2-Codex', 'Claude Opus 4.7', 'Claude Sonnet 4.6']
+model: ['Claude Sonnet 4.6', 'GPT-5.4 (high reasoning)', 'Claude Opus 4.7', 'GPT-5.2-Codex']
 target: vscode
 ---
 
 # scenario-removal-verifier
 
-Atomic verifier. Confirms the migrated Cucumber scenario is **gone** — the `.feature` no longer contains its name, and the Cucumber runner, when filtered by that name, reports zero scenarios. Used only at `phase: post-cleanup` of a migration, after `migrate-worker` has run `task: delete-scenario`.
+Confirms the migrated Cucumber scenario is **gone** — the `.feature` no longer contains its name, and the runner, when filtered by that name, reports zero scenarios. Used only at `phase: post-cleanup`, after `migrate-worker` ran `task: delete-scenario`.
 
-## Invariants
+## Inputs
 
-- English output only.
-- Commands run in the project root where `pom.xml` lives. Prefer `./mvnw` when present.
-- Does not modify any file. Only reads and runs the Cucumber command.
-
-## Required input
-
-- `project_root`
-- `legacy_runner_class`
-- `legacy_scenario_name`: the scenario name that was expected to be removed.
-- `feature_path`
+- `project_root` — directory containing `pom.xml`.
+- `legacy_runner_class` — Cucumber runner class.
+- `legacy_scenario_name` — scenario expected to be removed.
+- `feature_path` — path to the `.feature` file.
 
 ## Behavior
 
-1. **Grep check.** Read `feature_path` and look for the exact `legacy_scenario_name`. The name may appear as `Scenario: <name>` or `Scenario Outline: <name>`.
+1. **Grep check.** Read `feature_path` for `legacy_scenario_name` (matches `Scenario: <name>` or `Scenario Outline: <name>`).
    - Zero matches → pass step.
-   - Any remaining occurrence → `legacy_test_status: fail` with blocker `scenario-still-present: <feature_path>:<line>`.
+   - Any match → blocker `scenario-still-present: <feature_path>:<line>`.
 2. **Runner check.** Run:
 
    ```
    mvn test -Dtest=<legacy_runner_class> -Dcucumber.filter.name="<legacy_scenario_name>" -Dcucumber.features="<feature_path>"
    ```
 
-   Expected outcomes (either is a pass):
-   - Surefire reports `tests="0"` (no scenarios matched the filter), OR
-   - Cucumber reports `No scenarios were run` / `0 Scenarios (0 passed)`.
+   Pass = either Surefire reports `tests="0"` OR Cucumber reports `No scenarios were run` / `0 Scenarios (0 passed)`. Anything that still executes the scenario → blocker `scenario-still-runs: <short reason>`.
+3. Both pass → `legacy_test_status: removed`.
 
-   Any outcome where the scenario still executes → `legacy_test_status: fail` with blocker `scenario-still-runs: <short reason>`.
-
-3. Both steps pass → `legacy_test_status: removed`.
-
-## Report
+## Output
 
 ```json
 {
@@ -57,8 +46,13 @@ Atomic verifier. Confirms the migrated Cucumber scenario is **gone** — the `.f
 }
 ```
 
-## Refusal triggers
+## DO / DON'T
 
-- Missing any required input → refuse.
-- `project_root` has no `pom.xml` → refuse.
-- Any request to treat a remaining grep hit as acceptable → refuse.
+- DO: run from `project_root`.
+- DON'T: modify any file — only read and run the Cucumber command.
+
+## Refuses
+
+- Missing required input.
+- `project_root` has no `pom.xml`.
+- Any request to treat a remaining grep hit as acceptable.

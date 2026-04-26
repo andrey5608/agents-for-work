@@ -24,7 +24,7 @@ Act as a Cucumber failure diagnoser. Input: the .feature path I provide, and opt
 2. If a stack trace is provided, align top frames to step-definition methods; mark the last user frame.
 3. Cross-reference .github/copilot/knowledge/lessons-learned/cucumber-debug.md; cite any matched lesson and its fix.
 4. Check known failure classes: ambiguous step definitions, regex/parameter mismatch, missing @Before, DataTable mapping, DI not wired, non-idempotent test data.
-5. Output a minimal repro: ./mvnw test -Dtest=<Runner> -Dcucumber.filter.name="<scenario>" -Dcucumber.features="<path>".
+5. Output a minimal repro: mvn test -Dtest=<Runner> -Dcucumber.filter.name="<scenario>" -Dcucumber.features="<path>".
 6. If the failure class is novel, propose a lesson entry to append; write it only on my "y".
 ```
 
@@ -41,9 +41,9 @@ Step 2 — Produce a Draft using .github/copilot/templates/migration-draft.templ
 
 Step 3 — Ask for my approval of the Draft unless I already said "--approved-concept=<inline>" at the start. Do not write code until approved.
 
-Step 4 — Worker phase: write the Kotlin test under src/test/kotlin/..., honoring .editorconfig, using only plain @Test (no @ParameterizedTest, no Test Matrix), with all Allure annotations explicitly present, and a header comment "// migrated from features/<file>.feature:<scenario-name> — journal: .github/copilot/journal/<date>-<slug>.md". Do not touch the .feature.
+Step 4 — Worker phase: write the Kotlin test under src/test/kotlin/..., honoring .editorconfig, using only plain @Test (NEVER @ParameterizedTest, @MethodSource, @ValueSource, @CsvSource, @CsvFileSource, @EnumSource, @ArgumentsSource, or @TestFactory — Allure parameterized-test reporting is unreliable; multiple input sets dispatch via a private fun invoked once per set), with all Allure annotations explicitly present, and a header comment "// migrated from features/<file>.feature:<scenario-name> — journal: .github/copilot/journal/<date>-<slug>.md". Do not touch the .feature.
 
-Step 5 — Verifier phase: run ./mvnw -q verify; ./mvnw test -Dtest=<NewClass>#<method>; legacy ./mvnw test -Dtest=<Runner> -Dcucumber.filter.name="<scenario>". Parse target/surefire-reports/TEST-*.xml and target/allure-results/*.json. Check editorconfig compliance. Refuse to pass if any gate fails.
+Step 5 — Verifier phase: run mvn -q verify; mvn test -Dtest=<NewClass>#<method>; legacy mvn test -Dtest=<Runner> -Dcucumber.filter.name="<scenario>". Parse target/surefire-reports/TEST-*.xml and target/allure-results/*.json. Check editorconfig compliance. Refuse to pass if any gate fails.
 
 Step 6 — Write the migration journal using .github/copilot/journal/_TEMPLATE.md, update .github/copilot/journal/_INDEX.md, and ask whether to append lessons to lessons-learned/migration.md / migration-patterns.md / migration-pitfalls.md. Write only on my "y".
 ```
@@ -94,17 +94,17 @@ Act as the API-test authoring agent. Inputs: --module=<path> (directory with src
 
 Step 1 — Locate existing tests under <module>/src/test/kotlin/**. Sample a representative set (smallest 2 + newest 3). If the module has zero API tests, ask for a sibling module to mirror; refuse if none is given.
 
-Step 2 — Extract the architectural scheme from the samples: HTTP client (REST-assured / WebTestClient / OkHttp / Ktor / custom), base class or @ExtendWith / @SpringBootTest, fixture loading pattern (builders / resources fixtures / factory methods), auth wiring, assertion style (AssertJ / REST-assured body / JSON-Path / custom), parameterization style (plain @Test + helpers vs. @ParameterizedTest — choose whichever dominates; default to plain when mixed), Allure convention (Epic/Feature/Story values, default Severity, @Tag vocabulary), package/file naming, error-response shape, and external deps. Cite file:line evidence for every claim.
+Step 2 — Extract the architectural scheme from the samples: HTTP client (REST-assured / WebTestClient / OkHttp / Ktor / custom), base class or @ExtendWith / @SpringBootTest, fixture loading pattern (builders / resources fixtures / factory methods), auth wiring, assertion style (AssertJ / REST-assured body / JSON-Path / custom), Allure convention (Epic/Feature/Story values, default Severity, @Tag vocabulary), package/file naming, error-response shape, and external deps. Cite file:line evidence for every claim. Parameterization is NOT extracted as a choice — it is fixed by policy: plain @Test only (repo-wide ban on @ParameterizedTest & friends; Allure parameterized-test reporting is unreliable). If sibling tests use @ParameterizedTest, that is legacy debt — do not mirror it.
 
 Step 3 — Resolve each endpoint: HTTP method, path, parameters, request body type (from the module's serializer types or resource fixtures), success response shape, declared error responses, auth requirement. Ambiguities block — never guess method, path, or error class.
 
-Step 4 — Fill .github/copilot/templates/api-test-draft.template.md. Include the extracted scheme, per-endpoint happy + negative scenarios (using only error classes the module already tests), Allure annotation plan, parameterization choice with evidence, open questions.
+Step 4 — Fill .github/copilot/templates/api-test-draft.template.md. Include the extracted scheme, per-endpoint happy + negative scenarios (using only error classes the module already tests), Allure annotation plan, the input-grouping table (which @Test methods dispatch via a private fun, and per how many input sets — never @ParameterizedTest), open questions.
 
 Step 5 — Unless --approved-concept was provided, ask once: "Approve this Draft? (y / n / revise)". No code is written before approval.
 
 Step 6 — Write one Kotlin test class under src/test/kotlin/... following the module's package convention. Header comment: "// authored by api-test-author — journal: .github/copilot/journal/<YYYY-MM-DD>-<slug>.md". Allure annotations explicit on class and methods. English method names. Honor .editorconfig. Reuse the module's base classes, clients, fixtures — do not introduce parallel scaffolding. Refuse to touch production code; stop and surface the gap instead.
 
-Step 7 — Invoke the verifier with source: authored, new_test_class and new_test_method(s) set, legacy fields N/A. Gates 1, 2, 4, 5, 6 run; Gate 3 is skipped; Gate 6 does not reject @ParameterizedTest.
+Step 7 — Invoke the verifier with source: authored, new_test_class, new_test_method(s), and new_test_file (path under src/test/kotlin/...). Omit legacy_runner_class / legacy_scenario_name / feature_path / parity — they are ignored when source: authored. Gates 1, 2, 4, 5, 6 run; Gate 3 is skipped; Gate 6 (anti-pattern) applies the same forbidden-pattern set as migration — @ParameterizedTest is rejected for authored too.
 
 Step 8 — On green: journal entry with Mode: authored (reuse .github/copilot/journal/_TEMPLATE.md, rename the "Scenario → method" section body to "Endpoint → method"), update _INDEX.md, then ask three independent y/n questions for lessons/patterns/pitfalls. Write only on "y". On block: surface blockers[] and offer revise / abort.
 ```

@@ -16,11 +16,24 @@ This repository hosts autotests for a **backend-only** service. Test stack:
 3. **Respect `.editorconfig`.** Before writing any file, resolve the nearest `.editorconfig` and honor `indent_style`, `indent_size`, `tab_width`, `charset`, `end_of_line`, `trim_trailing_whitespace`, `insert_final_newline`. See `instructions/editorconfig-compliance.instructions.md`.
 4. **Kotlin sources live under `src/test/kotlin/...`** — never under `src/test/java/...`.
 5. **Allure annotations are preserved explicitly** on every migrated and every new test. See `instructions/allure.instructions.md`.
-6. **Migrated tests are plain `@Test`.** Do not introduce `@ParameterizedTest`, `@MethodSource`, or any Test Matrix construct. Parameterization lives inside the test body via private helper methods.
+6. **Every test is a plain `@Test` — no exceptions.** Applies to migrated tests, authored API tests, and any new test code in this repo. Parameterization lives inside the test body as **private helper method invocations**, one per input set. **Why:** Allure's parameterized-test reporting is unreliable — per-iteration steps, attachments, and Epic/Feature/Story labels merge or duplicate across iterations, and per-row history breaks. Plain `@Test` methods keep one Allure node per case with stable history, intact attachments, and predictable labels.
+
+    **DON'Ts (hard ban — verifier-enforced):**
+
+    - **DON'T** use `@ParameterizedTest`.
+    - **DON'T** use `@MethodSource`, `@ValueSource`, `@CsvSource`, `@CsvFileSource`, `@EnumSource`, `@ArgumentsSource`.
+    - **DON'T** use `@TestFactory` / dynamic tests as a Test-Matrix workaround.
+    - **DON'T** use `@RepeatedTest` for input variation (it is allowed only for stress / flake-detection runs that are not part of the regular suite).
+    - **DON'T** loop inside one `@Test` method to assert multiple input sets — split into separate `@Test`s or extract a private helper called once per input set, each call producing one logical Allure case.
+
+    **DOs:**
+
+    - **DO** write one `@Test` per behavior/input set, with its own Allure annotations.
+    - **DO** extract a `private fun` that takes the varying inputs and runs Arrange / Act / Assert; call it once per input set from the `@Test` body when grouping is meaningful (e.g., merged Cucumber outline rows).
 7. **Migrations are one scenario at a time.** Never batch. For `Scenario Outline` / `Examples`, produce and await approval of a per-row port plan before any code. See `agents/migrate-conductor.agent.md`.
 8. **Migration goes Draft → user approval → Final.** Short-circuit only when the user passes `--approved-concept=...` at invocation.
 9. **Self-learning writes are append-only and only after explicit user `y`.** Knowledge files live under `.github/copilot/knowledge/`.
-10. **Atomicity of agents.** Every agent has exactly one responsibility. Verifier gates (build, test execution, legacy baseline, scenario removal, Allure metadata, `.editorconfig`, anti-patterns, migration parity) are split across separate atomic custom agents; `results-verifier` is a thin orchestrator that composes their partial reports. When adding new behavior, prefer a new atomic agent over bolting a second responsibility onto an existing one. The invariant: if a single agent needs the word "and" to describe what it does, consider whether it should be two.
+10. **Atomicity of verifier gates.** Each verifier gate (build, test execution, legacy baseline, scenario removal, Allure metadata, `.editorconfig`, anti-patterns, migration parity) is owned by exactly one atomic custom agent; `results-verifier` is a thin orchestrator that composes their partial reports. This atomicity is strict: when adding a new gate, introduce a new atomic verifier rather than bolting a second responsibility onto an existing one. For non-verifier agents, atomicity is a preference, not a hard rule — a worker may expose multiple task types (e.g., `migrate-worker`'s `write-test` and `delete-scenario`) when the tasks share invariants and are sequentially tied to the same orchestrated flow. The invariant: if a single *verifier* needs the word "and" to describe what it does, it should be two.
 
 ## Repository layout for Copilot surfaces
 
@@ -68,7 +81,7 @@ Each agent lives at `.github/agents/<name>.agent.md`. The frontmatter declares i
 - `scenario-removal-verifier` — confirms a migrated Cucumber scenario has been deleted from its `.feature` and no longer runs (migration + `phase: post-cleanup`).
 - `allure-metadata-verifier` — checks `target/allure-results/*-result.json` for the required Allure labels on the new test.
 - `editorconfig-verifier` — checks a file's compliance with the nearest `.editorconfig`.
-- `anti-pattern-verifier` — static scan for `Thread.sleep`, UI libs, non-English strings, and (for migrated tests only) JUnit 5 parameterization.
+- `anti-pattern-verifier` — static scan for `Thread.sleep`, UI libs, non-English strings, and JUnit 5 parameterization (`@ParameterizedTest` and friends — banned unconditionally).
 - `migration-parity-verifier` — counts cases in the new test file and compares them to the port plan's non-dropped-row count.
 
 ## Tool namespaces used by agents
@@ -84,6 +97,17 @@ Tools are declared in the `tools:` field of each agent's YAML frontmatter. The v
 - `web/fetch` — fetch a URL (used when the skill receives a path to an external spec, e.g., a hosted OpenAPI document).
 
 Atoms are scoped tightly; conductors and authors are given broad tool access so they can operate autonomously. `user-invocable: false` in the frontmatter hides a subagent from the agents dropdown — it is still reachable via its parent.
+
+### Default VS Code Agent mode — workspace settings
+
+The built-in **Agent** mode (used when no `@<custom-agent>` is selected) is configured at the workspace level via `.vscode/settings.json`. The intent is that every contributor who opens this repo gets the maximally-capable default agent without per-session setup:
+
+- `chat.agent.enabled: true`, `chat.agent.maxRequests: 100` — Agent mode on, generous step budget.
+- `chat.mcp.enabled: true`, `chat.mcp.discovery.enabled: true` — globally-configured MCP tools surface here too.
+- `github.copilot.chat.agent.runTasks: true`, `…autoFix: true`, `…codesearch.enabled: true` — built-in tool families enabled.
+- `chat.tools.autoApprove: false` — tools are enabled, but the agent still prompts on destructive actions.
+
+Per-tool opt-out (e.g., disabling `runCommands` for a single thread) is done in VS Code's tools picker — it is per-session UI state, not a workspace setting, so this repo doesn't pin it.
 
 ## Knowledge base layout
 
