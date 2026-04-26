@@ -4,7 +4,7 @@ description: Orchestrator — delegates to atomic verifiers (build/test, legacy 
 tools: ['agent', 'run/terminal', 'read/terminalLastCommand', 'search/codebase']
 agents: ['build-and-test-verifier', 'legacy-baseline-verifier', 'scenario-removal-verifier', 'allure-metadata-verifier', 'editorconfig-verifier', 'anti-pattern-verifier', 'migration-parity-verifier']
 user-invocable: false
-model: ['GPT-5.4 (high reasoning)', 'GPT-5.2-Codex', 'Claude Opus 4.7', 'Claude Sonnet 4.6']
+model: ['Claude Sonnet 4.6', 'GPT-5.4 (high reasoning)', 'Claude Opus 4.7', 'GPT-5.2-Codex']
 target: vscode
 ---
 
@@ -82,13 +82,13 @@ The atomic verifiers are the source of truth for each gate's pass/fail. This age
 1. `build-and-test-verifier`
 2. `allure-metadata-verifier`
 3. `editorconfig-verifier`
-4. `anti-pattern-verifier` (with `source: authored` — JUnit 5 parameterization allowed)
+4. `anti-pattern-verifier` (with `source: authored` — same forbidden-pattern set as migration; `@ParameterizedTest` is banned here too)
 
 No `legacy_*` atom, no parity atom.
 
 ## Execution order & short-circuit
 
-Run in the order above. If `build-and-test-verifier` reports `build_status: fail`, the orchestrator still runs `editorconfig-verifier`, `anti-pattern-verifier`, and `migration-parity-verifier` (they work from source inputs and do not require a successful build). It skips `allure-metadata-verifier` because that atom depends on build-generated test results/artifacts. Record `skipped-due-to-upstream-failure` as a note, not a blocker, for any skipped atom.
+Run in the order above. If `build-and-test-verifier` reports `build_status: fail`, the orchestrator still runs `editorconfig-verifier`, `anti-pattern-verifier`, and `migration-parity-verifier` — each of these works purely from the source file and caller-supplied inputs (port plan, draft), so a failed build does not invalidate their signal. `allure-metadata-verifier` is skipped, because it depends on `target/allure-results/*-result.json`, which are produced only when the test actually runs. Record `skipped-due-to-upstream-failure` as a note, not a blocker, for the skipped atom.
 
 ## Composition
 

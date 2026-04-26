@@ -23,7 +23,7 @@ Endpoints requested:
 | Fixture loading | <builders / `resources/fixtures/*.json` / factory method> | |
 | Auth wiring | <Bearer header / API key / mTLS / none> | |
 | Assertion style | <AssertJ / REST-assured body / JSON-Path / custom> | |
-| Parameterization | <plain @Test + helpers / @ParameterizedTest — choose whichever dominates; if mixed, default to plain @Test> | |
+| Parameterization | always plain `@Test` + private helpers (repo-wide ban on `@ParameterizedTest`, see `junit5.instructions.md`) | n/a — fixed by policy |
 | Allure convention | <Epic/Feature/Story values typical for the module; default Severity> | |
 | Error-response shape | <ErrorResponse DTO / raw JSON path / enum values in use> | |
 | External deps | <WireMock stubs / Testcontainers / DB seed hooks> | |
@@ -66,10 +66,15 @@ Method-level (per row in the table above):
 - Fixtures: <list + paths>
 - Test doubles / fakes: <list / none>
 
-## Parameterization decision
+## Input grouping (when a `@Test` exercises multiple input sets)
 
-- Chosen: <plain @Test + private helpers | @ParameterizedTest with @MethodSource / @CsvSource>
-- Justification: <cite 1-2 existing tests in the module, `file:line`, that follow this shape>
+Always plain `@Test`. List below any method that calls a private helper for multiple input sets, and the `private fun` shape.
+
+| `@Test` method | Private helper | Input sets dispatched |
+|-----------------|-----------------|------------------------|
+| `<methodName>` | `runFor<Case>(args…)` | <list, one row per call> |
+
+If no method needs grouping, leave the table empty.
 
 ## Open questions for the user
 

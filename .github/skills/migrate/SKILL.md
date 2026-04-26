@@ -38,7 +38,7 @@ Migrate exactly one Cucumber scenario to Kotlin + JUnit 5.
 - English output only.
 - Backend only — no UI patterns.
 - One scenario per run. No batching.
-- Plain `@Test` only — no `@ParameterizedTest` for migrated code.
+- Plain `@Test` only — repo-wide ban on `@ParameterizedTest` & friends (applies to all tests, not just migrated). Multiple input sets go through a `private fun` invoked once per set. Reason: Allure parameterized-test reporting is unreliable.
 - All Allure metadata preserved explicitly.
 - `.editorconfig` honored on every write.
 - Draft → approval → Final unless `--approved-concept` was passed.

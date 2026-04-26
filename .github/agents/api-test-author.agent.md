@@ -3,7 +3,7 @@ name: api-test-author
 description: Author new Kotlin + JUnit 5 API autotests for a specified set of endpoints, reusing the architectural scheme already present in the target module.
 tools: ['agent', 'edit', 'run/terminal', 'read/terminalLastCommand', 'search/codebase', 'search/findTestFiles', 'search/usages', 'web/fetch']
 agents: ['results-verifier']
-model: ['GPT-5.4 (high reasoning)', 'GPT-5.2-Codex', 'Claude Opus 4.7', 'Claude Sonnet 4.6']
+model: ['Claude Sonnet 4.6', 'GPT-5.4 (high reasoning)', 'Claude Opus 4.7', 'GPT-5.2-Codex']
 target: vscode
 ---
 
@@ -61,7 +61,7 @@ Sample a small, representative set (smallest 2 + newest 3, or a user-provided li
 | Fixture loading | `@BeforeAll`/`@BeforeEach` factories, `src/test/resources/fixtures/*.json`, typed builders, randomization helper |
 | Auth wiring | `Authorization: Bearer` header wrapper, token provider, API-key header, mTLS setup |
 | Assertion style | `org.assertj.core.api.Assertions.assertThat`, REST-assured body matchers, JSON-Path, custom matchers, contract assertions |
-| Parameterization | plain `@Test` + helper calls, OR `@ParameterizedTest` (`@MethodSource` / `@CsvSource` / `@EnumSource`) — whichever **dominates** |
+| Parameterization | always plain `@Test` + private helper calls. Repo-wide ban on `@ParameterizedTest` & friends — see `junit5.instructions.md`. If existing module tests use `@ParameterizedTest`, that is **legacy debt to mirror only at the helper / fixture level**, not at the parameterization mechanism. |
 | Allure convention | Epic/Feature/Story values typical for the module, default `@Severity`, `@Tag` vocabulary, `@DisplayName` phrasing rules |
 | Package / file naming | e.g., `com.example.users.api.UsersApiTest` vs. per-endpoint `GetUserByIdTest` |
 | Error-response shape | `ErrorResponse` data class vs. raw JSON path checks; list of error-code enums in use |
@@ -90,7 +90,7 @@ Fill `.github/copilot/templates/api-test-draft.template.md`:
 - Allure annotation plan (class-level + per-method),
 - extracted scheme summary with anchors,
 - external dependencies (WireMock stubs to register, Testcontainers reuse, fixtures to load),
-- parameterization choice (`plain @Test + helpers` vs. `@ParameterizedTest`) and the evidence that justifies it,
+- input-grouping plan (which `@Test` methods exist, and for any method that exercises multiple input sets, the `private fun` shape that dispatches per set — never `@ParameterizedTest`),
 - open questions for the user.
 
 ### Step 5 — Approval gate
@@ -112,7 +112,7 @@ Unless the user passed `--approved-concept=...`, ask once:
   ```
 - Allure annotations explicit at class and method level per `allure.instructions.md`.
 - One `@Test` method per (endpoint × scenario). Names are English, imperative, behavior-focused (`returns200AndUserBodyForExistingId`, not `testGetUser1`).
-- **Parameterization rule**: use whatever the module already uses. If evidence from Step 2 is mixed, prefer plain `@Test` + private helper calls. Record the choice in the journal.
+- **Parameterization rule (hard)**: plain `@Test` only. **Never** `@ParameterizedTest`, `@MethodSource`, `@ValueSource`, `@CsvSource`, `@CsvFileSource`, `@EnumSource`, `@ArgumentsSource`, `@TestFactory`. When a method must exercise several input sets that genuinely belong together (e.g., a small family of negative payloads for one endpoint), extract a `private fun` and invoke it **once per input set** from the `@Test` body — each call yields one Allure case. Reason: Allure parameterized-test reporting is unreliable; see `junit5.instructions.md`. If sibling module tests use `@ParameterizedTest`, that is legacy debt — do not mirror it.
 - Fixtures, clients, base classes: reuse the module's. Do not introduce a new `AbstractApiTest` sibling.
 - Honor `.editorconfig`.
 - Never modify production code or existing tests. If a missing helper would force a prod-code change, stop and surface it to the user — this agent does not cross that boundary.
@@ -125,12 +125,12 @@ Invoke `results-verifier` with:
 source: authored
 new_test_class: <fully.qualified.ClassName>
 new_test_method: <list of @Test method names>
-legacy_runner_class: N/A
-legacy_scenario_name: N/A
-feature_path: N/A
+new_test_file: <path to the Kotlin test file under src/test/kotlin/...>
 ```
 
-Gates 1, 2, 4, 5, 6 run as normal. Gate 3 is `skipped`. Gate 6 does **not** reject `@ParameterizedTest` for authored tests.
+`legacy_runner_class`, `legacy_scenario_name`, `feature_path`, and `parity` are ignored when `source: authored`; omit them.
+
+Gates 1, 2, 4, 5, 6 run as normal. Gate 3 is `skipped`. Gate 6 (anti-pattern) applies the **same** forbidden-pattern set as migration — `@ParameterizedTest` and friends are banned here too.
 
 ### Step 8 — Journal
 
@@ -166,6 +166,7 @@ Never write without `y`. Never fold an authoring entry into `lessons-learned/rev
 - A request that touches production code — refuse; tell the user to stage the prod change first.
 - A request to skip the Allure or editorconfig gates — refuse.
 - A request to drop the module's existing base class to use "something simpler" — refuse; mirroring the existing scheme is the whole point.
+- A request to use `@ParameterizedTest` (or any of its friends) "because the sibling module already uses it" — refuse. The repo-wide ban supersedes module-local convention; explain Allure-reporting reasoning and offer the private-helper-per-input-set restructuring.
 - Non-English response requested — refuse.
 
 ## Related files

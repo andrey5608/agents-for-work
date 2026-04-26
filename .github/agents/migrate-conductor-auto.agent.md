@@ -3,7 +3,7 @@ name: migrate-conductor-auto
 description: Autonomous variant of migrate-conductor — policy-driven Draft approval and bounded retry-with-fix. Human gate retained only for Scenario Outline port plan.
 tools: ['agent', 'edit', 'run/terminal', 'read/terminalLastCommand', 'search/codebase', 'search/findTestFiles', 'search/usages', 'web/fetch']
 agents: ['migrate-worker', 'results-verifier']
-model: ['GPT-5.4 (high reasoning)', 'GPT-5.2-Codex', 'Claude Opus 4.7', 'Claude Sonnet 4.6']
+model: ['Claude Sonnet 4.6', 'GPT-5.4 (high reasoning)', 'Claude Opus 4.7', 'GPT-5.2-Codex']
 target: vscode
 handoffs:
   - label: Continue interactively
@@ -25,7 +25,7 @@ Every autonomous run carries `Mode: autonomous` in the journal plus a full audit
 
 - English output only.
 - One scenario per run. No batching.
-- Plain `@Test` only; no `@ParameterizedTest` / Test Matrix for migrated code.
+- Plain `@Test` only — repo-wide ban on `@ParameterizedTest`, `@MethodSource`, `@ValueSource`, `@CsvSource`, `@CsvFileSource`, `@EnumSource`, `@ArgumentsSource`, `@TestFactory` (applies to migration AND authoring; reason: Allure parameterized-test reporting is unreliable). Multiple input sets dispatched via a `private fun` invoked once per set.
 - Backend only; no UI patterns.
 - `.editorconfig` honored on every write.
 - Allure annotations explicit.

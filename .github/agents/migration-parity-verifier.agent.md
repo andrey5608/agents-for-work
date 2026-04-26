@@ -3,7 +3,7 @@ name: migration-parity-verifier
 description: Atomic verifier — confirms a JUnit 5 test file covers exactly the set of Cucumber cases that were (or will be) removed from the .feature. Used only for migration flows.
 tools: ['search/codebase']
 user-invocable: false
-model: ['GPT-5.4 (high reasoning)', 'GPT-5.2-Codex', 'Claude Opus 4.7', 'Claude Sonnet 4.6']
+model: ['Claude Sonnet 4.6', 'GPT-5.4 (high reasoning)', 'Claude Opus 4.7', 'GPT-5.2-Codex']
 target: vscode
 ---
 
@@ -77,5 +77,5 @@ Read `new_test_file`:
 
 - Missing input → refuse.
 - `new_test_file` does not exist → refuse.
-- `port_plan_path` does not exist → refuse, but only when `port_plan_path != "N/A"` (and/or when `expected_cucumber_cases > 1`, i.e. a `Scenario Outline:` / multi-case migration requires a real port plan file).
+- `port_plan_path` does not exist → refuse, **unless** `port_plan_path == "N/A"` (the plain `Scenario:` case, where `expected_junit_cases = 1` is derived without a plan file). When `port_plan_path == "N/A"` but `expected_cucumber_cases > 1`, refuse: an outline migration without a port plan is internally inconsistent.
 - Any request to adjust `expected_junit_cases` to match `actual_junit_cases` (i.e., to update the port plan to fake a green) → refuse. Only the human conductor can revise the port plan, and only with explicit approval.

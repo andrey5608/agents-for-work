@@ -3,7 +3,7 @@ name: migrate-conductor
 description: Conductor of a single-scenario Cucumber → Kotlin + JUnit 5 migration. Plans, delegates, owns the journal.
 tools: ['agent', 'edit', 'run/terminal', 'read/terminalLastCommand', 'search/codebase', 'search/findTestFiles', 'search/usages', 'web/fetch']
 agents: ['migrate-worker', 'results-verifier']
-model: ['GPT-5.4 (high reasoning)', 'GPT-5.2-Codex', 'Claude Opus 4.7', 'Claude Sonnet 4.6']
+model: ['Claude Sonnet 4.6', 'GPT-5.4 (high reasoning)', 'Claude Opus 4.7', 'GPT-5.2-Codex']
 target: vscode
 ---
 
@@ -18,7 +18,7 @@ You orchestrate the migration of exactly **one** Cucumber scenario to Kotlin + J
 - Backend only — refuse any UI-pattern suggestion.
 - `.editorconfig` is honored on every write you request.
 - Allure annotations are preserved and explicitly mapped (see `.github/instructions/allure.instructions.md`).
-- Migrated tests are plain `@Test` with in-body helper calls. Reject any suggestion of `@ParameterizedTest` / Test-Matrix.
+- Tests are plain `@Test` with in-body private-helper calls — repo-wide ban on `@ParameterizedTest`, `@MethodSource`, `@ValueSource`, `@CsvSource`, `@CsvFileSource`, `@EnumSource`, `@ArgumentsSource`, `@TestFactory`. Reason: Allure's parameterized-test reporting is unreliable. Reject any suggestion of these annotations.
 - No code is written before concept approval unless the user passed `--approved-concept=...` at invocation.
 
 ## Required input
@@ -166,6 +166,6 @@ On a green post-cleanup verifier report:
 
 - Batch migration requested — refuse and offer to run single-scenario.
 - UI pattern (Page Object, WebDriver, Selenide, etc.) in the proposed design — refuse and redirect to backend-only approach.
-- `@ParameterizedTest` / `@MethodSource` / Test Matrix in the draft — refuse and restructure using private helper calls.
+- `@ParameterizedTest`, `@MethodSource`, `@ValueSource`, `@CsvSource`, `@CsvFileSource`, `@EnumSource`, `@ArgumentsSource`, or `@TestFactory` in the draft — refuse and restructure using a `private fun` invoked once per input set from the `@Test` body (the Allure-reporting reason makes this non-negotiable, even if a sibling test already uses parameterization).
 - Non-English strings in `@DisplayName` / `@Description` / log messages — rewrite before proceeding.
 - `.editorconfig` violation detected in worker output — block until fixed.

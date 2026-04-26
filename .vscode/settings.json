@@ -1,0 +1,29 @@
+{
+  // Workspace defaults for VS Code Copilot Chat — applied to anyone opening this repo.
+  // Goal: the default Copilot "Agent" (the built-in mode used when no @-prefixed custom
+  // agent is selected) starts with every tool enabled and a generous step budget, so
+  // contributors don't have to hand-pick capabilities each session.
+
+  // Agent mode itself.
+  "chat.agent.enabled": true,
+  "chat.agent.maxRequests": 100,
+
+  // MCP — discovery + auto-start so any MCP tools the user has configured globally
+  // are available to the default agent in this workspace too.
+  "chat.mcp.enabled": true,
+  "chat.mcp.discovery.enabled": true,
+
+  // Built-in agent tool families. Each one corresponds to a tool group exposed in
+  // the VS Code Copilot tools picker; setting them to true makes them available
+  // by default. Per-session opt-out is still possible via the tools picker.
+  "github.copilot.chat.agent.runTasks": true,
+  "github.copilot.chat.agent.autoFix": true,
+  "github.copilot.chat.codesearch.enabled": true,
+  "github.copilot.chat.edits.temporalContext.enabled": true,
+  "github.copilot.chat.editor.temporalContext.enabled": true,
+  "github.copilot.chat.search.semanticTextResults": true,
+
+  // Keep the human in the loop for destructive actions — tools are enabled,
+  // but the agent still prompts before running them.
+  "chat.tools.autoApprove": false
+}

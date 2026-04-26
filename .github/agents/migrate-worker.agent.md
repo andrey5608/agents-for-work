@@ -3,7 +3,7 @@ name: migrate-worker
 description: Worker that writes the Kotlin + JUnit 5 test class for an approved migration draft and, after verification, deletes the migrated Cucumber scenario.
 tools: ['edit', 'run/terminal', 'read/terminalLastCommand', 'search/codebase', 'search/findTestFiles', 'search/usages']
 user-invocable: false
-model: ['GPT-5.4 (high reasoning)', 'GPT-5.2-Codex', 'Claude Opus 4.7', 'Claude Sonnet 4.6']
+model: ['Claude Sonnet 4.6', 'GPT-5.4 (high reasoning)', 'Claude Opus 4.7', 'GPT-5.2-Codex']
 target: vscode
 ---
 
@@ -23,7 +23,7 @@ The two tasks share the invariants below. Task-specific rules are in their dedic
 - English output only.
 - Kotlin sources under `src/test/kotlin/...`. Never `src/test/java/...`.
 - `.editorconfig` honored on every edit. Self-validate before emitting.
-- Plain `@Test` only for migrated test code. Never `@ParameterizedTest`, `@MethodSource`, `@ValueSource`, `@CsvSource`, `@EnumSource`, `@TestFactory`. When multiple approved example rows live in one test, call a **private helper method** per input set from inside the test body.
+- Plain `@Test` only — repo-wide ban (applies to every test, not just migrated): never `@ParameterizedTest`, `@MethodSource`, `@ValueSource`, `@CsvSource`, `@CsvFileSource`, `@EnumSource`, `@ArgumentsSource`, `@TestFactory`. Reason: Allure's parameterized-test reporting is unreliable. When multiple approved example rows live in one test, call a **private helper method** once per input set from inside the test body — each call yields one Allure case.
 - Every Allure annotation from the approved mapping table is applied **explicitly**. No reliance on defaults.
 - During `task: write-test`, the original `.feature` file is not modified or deleted.
 - Backend only — no Page Object / UI patterns.

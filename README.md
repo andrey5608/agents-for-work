@@ -21,6 +21,6 @@ See [`docs/README.md`](docs/README.md) for the full manual, and [`docs/workflows
 - Backend only — no Page Objects / UI patterns.
 - `.editorconfig` is honored on every write.
 - Migrations go one scenario at a time, Draft → user approval → Final, with a verifier gate that runs the real test.
-- Migrated tests are plain `@Test`; parameterization lives inside the body as private helper calls.
+- Every test (migrated and authored) is a plain `@Test`; parameterization lives inside the body as private helper calls — never `@ParameterizedTest` & friends. Reason: Allure parameterized-test reporting is unreliable.
 - All Allure metadata is preserved explicitly.
 - Lessons-learned writes require explicit user `y`.
